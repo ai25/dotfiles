@@ -4,7 +4,7 @@ set $alt Mod1
 
 
 # set font
-font pango: Noto Sans 8
+font pango: Ubuntu:style=Regular, FontAwesome:style=Regular 10
 
 # Use Mouse+$super to drag floating windows to their wanted position
 floating_modifier $super
@@ -15,7 +15,7 @@ exec --no-startup-id nitrogen --restore
 exec --no-startup-id xsettingsd &
 exec --no-startup-id compton -b
 exec --no-startup-id i3-status -c ~/.config/i3status/config
-exec --no-startup-id syncthing 
+exec --no-startup-id syncthing
 
 # start a terminal
 bindsym $super+Return exec kitty -e zsh
@@ -154,12 +154,19 @@ for_window [class=URxvt|Firefox|Geany|Evince|Soffice|libreoffice*|mpv|Ghb|Xfburn
 for_window [class=Xfburn|GParted|System-config-printer.py|Lxtask|Pavucontrol|Exo-helper*|Lxrandr|Arandr] focus
 
 # colour of border, background, text, indicator, and child_border
-client.focused              #bf616a #2f343f #d8dee8 #bf616a #d8dee8
-client.focused_inactive     #2f343f #2f343f #d8dee8 #2f343f #2f343f
-client.unfocused            #2f343f #2f343f #d8dee8 #2f343f #2f343f
-client.urgent               #2f343f #2f343f #d8dee8 #2f343f #2f343f
-client.placeholder          #2f343f #2f343f #d8dee8 #2f343f #2f343f
-client.background           #2f343f
+# client.focused              #bf616a #2f343f #d8dee8 #bf616a #d8dee8
+# client.focused_inactive     #2f343f #2f343f #d8dee8 #2f343f #2f343f
+# client.unfocused            #2f343f #2f343f #d8dee8 #2f343f #2f343f
+# client.urgent               #2f343f #2f343f #d8dee8 #2f343f #2f343f
+# client.placeholder          #2f343f #2f343f #d8dee8 #2f343f #2f343f
+# client.background           #2f343f
+# colors
+# from: https://gist.github.com/paulbdavis/4956329
+# client.focused #688060 #688060 #303030 #ffcfaf
+client.focused #dcdccc #dcdccc #3c3b37 #ffcfaf
+client.focused_inactive #3c3b37 #3c3b37 #7f9f7f #3c3b37
+client.unfocused #3c3b37 #3c3b37 #dcdccc #3c3b37
+client.urgent #dca3a3 #dca3a3 #dcdccc #3c3b37
 
 # gaps
 gaps inner 10
