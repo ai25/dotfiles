@@ -1,0 +1,211 @@
+# set modifier
+set $super Mod4
+set $alt Mod1
+
+
+# set font
+font pango: Noto Sans 8
+
+# Use Mouse+$super to drag floating windows to their wanted position
+floating_modifier $super
+
+#autostart
+# exec --no-startup-id hsetroot -center ~/.wallpaper.png
+exec --no-startup-id nitrogen --restore
+exec --no-startup-id xsettingsd &
+exec --no-startup-id compton -b
+exec --no-startup-id i3-status -c ~/.config/i3status/config
+exec --no-startup-id syncthing 
+
+# start a terminal
+bindsym $super+Return exec kitty -e zsh
+
+
+# start dmenu (a program launcher)
+bindsym $super+Shift+d exec i3-dmenu-desktop --dmenu="dmenu -i -fn 'Noto Sans:size=8'"
+bindsym $super+x exec rofi -lines 12 -padding 18 -width 60 -location 0 -show drun -sidebar-mode -columns 3 -font 'Noto Sans 8'
+
+# common apps keybinds
+bindsym $super+l exec i3lock -i ~/.wallpaper.png
+bindsym $super+Shift+f exec thunar;workspace 3;focus
+exec --no-startup-id nitrogen --restore
+bindsym $super+Shift+g exec geany
+
+#change volume
+bindsym XF86AudioRaiseVolume exec pulseaudio-ctl up
+bindsym XF86AudioLowerVolume exec pulseaudio-ctl down
+bindsym XF86AudioMute exec pulseaudio-ctl mutj
+
+# change brightness
+bindsym XF86MonBrightnessUp exec brightnessctl set +5%
+bindsym XF86MonBrightnessDown exec brightnessctl set 5%-
+
+# music control
+bindsym XF86AudioNext exec mpc next
+bindsym XF86AudioPrev exec mpc prev
+bindsym XF86AudioPlay exec mpc toggle
+bindsym XF86AudioStop exec mpc stop
+
+# keyboard light on at boot
+exec --no-startup-id xset led 3
+
+# kill focused window
+bindsym $super+Shift+q kill
+bindsym $alt+F4 kill
+
+# change focus
+bindsym $super+Left focus left
+bindsym $super+Down focus down
+bindsym $super+Up focus up
+bindsym $super+Right focus right
+
+# move focused window
+bindsym $super+Shift+Left move left
+bindsym $super+Shift+Down move down
+bindsym $super+Shift+Up move up
+bindsym $super+Shift+Right move right
+
+# split in horizontal orientation
+
+
+# split in vertical orientation
+
+# enter fullscreen mode for the focused container
+bindsym $super+f fullscreen toggle
+
+# change container layout split
+bindsym $super+s layout toggle split
+
+# toggle tiling / floating
+bindsym $super+space floating toggle
+
+# change focus between tiling / floating windows
+bindsym $super+Shift+space focus mode_toggle
+
+# switch to workspace
+bindsym $alt+Control+Right workspace next
+bindsym $alt+Control+Left workspace prev
+bindsym $super+1 workspace 1
+bindsym $super+2 workspace 2
+bindsym $super+3 workspace 3
+bindsym $super+4 workspace 4
+bindsym $super+5 workspace 5
+bindsym $super+6 workspace 6
+bindsym $super+7 workspace 7
+bindsym $super+8 workspace 8
+bindsym $super+9 workspace 9
+bindsym $super+0 workspace 10
+
+
+# move focused container to workspace
+bindsym $super+Shift+1 move container to workspace 1
+bindsym $super+Shift+2 move container to workspace 2
+bindsym $super+Shift+3 move container to workspace 3
+bindsym $super+Shift+4 move container to workspace 4
+bindsym $super+Shift+5 move container to workspace 5
+bindsym $super+Shift+6 move container to workspace 6
+bindsym $super+Shift+7 move container to workspace 7
+bindsym $super+Shift+8 move container to workspace 8
+bindsym $super+Shift+9 move container to workspace 9
+bindsym $super+Shift+0 move container to workspace 10
+
+# restart i3 inplace (preserves your layout/session, can be used to upgrade i3)
+bindsym $super+Shift+r restart
+
+# exit i3
+# bindsym $super+q exec "i3-nagbar -t warning -m 'Really, exit?' -b 'Yes' 'i3-msg exit'"
+
+# resize window (you can also use the mouse for that)
+mode "resize" {
+        bindsym Left resize shrink width 5 px or 5 ppt
+        bindsym Down resize grow height 5 px or 5 ppt
+        bindsym Up resize shrink height 5 px or 5 ppt
+        bindsym Right resize grow width 5 px or 5 ppt
+        bindsym Return mode "default"
+}
+bindsym $super+r mode "resize"
+
+# panel
+bar {
+        colors {
+        background #2f343f
+        statusline #2f343f
+        separator #4b5262
+
+        # colour of border, background, and text
+        focused_workspace       #2f343f #bf616a #d8dee8
+        active_workspace        #2f343f #2f343f #d8dee8
+        inactive_workspace      #2f343f #2f343f #d8dee8
+        urgent_workspacei       #2f343f #ebcb8b #2f343f
+    }
+        status_command i3status
+}
+
+# window rules, you can find the window class using xprop
+for_window [class=".*"] border pixel 4
+assign [class=URxvt] 1
+assign [class=Brave|Transmission-gtk] 2
+assign [class=Thunar|File-roller] 3
+assign [class=Geany|Evince|Gucharmap|Soffice|libreoffice*] 4
+assign [class=Audacity|Vlc|mpv|Ghb|Xfburn|Gimp*|Inkscape] 5
+assign [class=Lxappearance|System-config-printer.py|Lxtask|GParted|Pavucontrol|Exo-helper*|Lxrandr|Arandr] 6
+for_window [class=Viewnior|feh|Audacious|File-roller|Lxappearance|Lxtask|Pavucontrol] floating enable
+for_window [class=URxvt|Firefox|Geany|Evince|Soffice|libreoffice*|mpv|Ghb|Xfburn|Gimp*|Inkscape|Vlc|Lxappearance|Audacity] focus
+for_window [class=Xfburn|GParted|System-config-printer.py|Lxtask|Pavucontrol|Exo-helper*|Lxrandr|Arandr] focus
+
+# colour of border, background, text, indicator, and child_border
+client.focused              #bf616a #2f343f #d8dee8 #bf616a #d8dee8
+client.focused_inactive     #2f343f #2f343f #d8dee8 #2f343f #2f343f
+client.unfocused            #2f343f #2f343f #d8dee8 #2f343f #2f343f
+client.urgent               #2f343f #2f343f #d8dee8 #2f343f #2f343f
+client.placeholder          #2f343f #2f343f #d8dee8 #2f343f #2f343f
+client.background           #2f343f
+
+# gaps
+gaps inner 10
+gaps outer 10
+
+# Resizing windows
+bindsym $super+Shift+h resize shrink width 10 px or 10 ppt
+bindsym $super+Shift+j resize grow height 10 px or 10 ppt
+bindsym $super+Shift+k resize shrink height 10 px or 10 ppt
+bindsym $super+Shift+l resize grow width 10 px or 10 ppt
+
+# change tiling layout
+bindsym $super+Shift+w layout tabbed
+# bindsym $super+Shift+o layout toggle split
+# start main stack
+bindsym $super+Shift+o  layout splitv; move left; resize grow right 20 px or 20 ppt; split v; layout stacking
+
+# Scratchpad
+## Make the currently focused window a scratchpad
+bindsym $super+Shift+minus move scratchpad
+
+# Show the first scratchpad window
+bindsym $super+minus scratchpad show
+
+bindsym $super+Shift+$alt+1 mark "sp1", move scratchpad
+bindsym $super+Shift+$alt+2 mark "sp2", move scratchpad
+bindsym $super+Shift+$alt+3 mark "sp3", move scratchpad
+bindsym $super+Shift+$alt+4 mark "sp4", move scratchpad
+bindsym $super+Shift+$alt+5 mark "sp5", move scratchpad
+bindsym $super+Shift+$alt+6 mark "sp6", move scratchpad
+bindsym $super+Shift+$alt+7 mark "sp7", move scratchpad
+bindsym $super+Shift+$alt+8 mark "sp8", move scratchpad
+bindsym $super+Shift+$alt+9 mark "sp9", move scratchpad
+bindsym $super+Shift+$alt+0 mark "sp0", move scratchpad
+# bindsym $super+Shift+grave mark "sp`", move scratchpad
+# bindsym $super+Shift+tab mark "sp`", move scratchpad
+
+bindsym $super+$alt+1 [con_mark="sp1"] scratchpad show, move position center, resize set 2100 1350
+bindsym $super+$alt+2 [con_mark="sp2"] scratchpad show, move position center, resize set 2100 1350
+bindsym $super+$alt+3 [con_mark="sp3"] scratchpad show, move position center, resize set 2100 1350
+bindsym $super+$alt+4 [con_mark="sp4"] scratchpad show, move position center, resize set 2100 1350
+bindsym $super+$alt+5 [con_mark="sp5"] scratchpad show, move position center, resize set 2100 1350
+bindsym $super+$alt+6 [con_mark="sp6"] scratchpad show, move position center, resize set 2100 1350
+bindsym $super+$alt+7 [con_mark="sp7"] scratchpad show, move position center, resize set 2100 1350
+bindsym $super+$alt+8 [con_mark="sp8"] scratchpad show, move position center, resize set 2100 1350
+bindsym $super+$alt+9 [con_mark="sp9"] scratchpad show, move position center, resize set 2100 1350
+bindsym $super+$alt+0 [con_mark="sp0"] scratchpad show, move position center, resize set 2100 1350
+bindsym $super+tab scratchpad show
+
