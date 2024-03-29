@@ -182,7 +182,6 @@ local plugins = {
 	-- helpful for jsx and html
 	{
 		"windwp/nvim-ts-autotag",
-		ft = { "typescript", "typescriptreact", "html", "svelte", "vue", "javascript", "javascriptreact" },
 		config = function()
 			require("nvim-ts-autotag").setup({
 				autotag = { enable = true },
@@ -203,19 +202,111 @@ local plugins = {
 		-- use opts = {} for passing setup options
 		-- this is equalent to setup({}) function
 	},
-	-- To make a plugin not be loaded
-	-- {
-	--   "NvChad/nvim-colorizer.lua",
-	--   enabled = false
-	-- },
 
 	-- All NvChad plugins are lazy-loaded by default
 	-- For a plugin to be loaded, you will need to set either `ft`, `cmd`, `keys`, `event`, or set `lazy = false`
 	-- If you want a plugin to load on startup, add `lazy = false` to a plugin spec, for example
-	-- {
-	--   "mg979/vim-visual-multi",
-	--   lazy = false,
-	-- }
+	{
+		"mg979/vim-visual-multi",
+		lazy = false,
+	},
+
+	--Surround:
+	{
+		"kylechui/nvim-surround",
+		version = "*",
+		event = "VeryLazy",
+		config = function()
+			require("nvim-surround").setup({})
+		end,
+	},
+
+	-- Targets.vim is a Vim plugin that adds various text objects to give you more targets to operate on. It expands on the idea of simple commands like di' (delete inside the single quotes around the cursor) to give you more opportunities to craft powerful commands that can be repeated reliably. One major goal is to handle all corner cases correctly.
+
+	{
+		"wellle/targets.vim",
+		event = "VeryLazy",
+	},
+
+	-- Extended matching for %
+	{
+		"adelarsq/vim-matchit",
+		event = "VeryLazy",
+		config = function()
+			vim.cmd([[packadd! matchit]])
+		end,
+	},
+
+	-- Git Blame
+	{
+		"f-person/git-blame.nvim",
+		event = "VeryLazy",
+	},
+
+	-- Git Signs
+	{
+		"lewis6991/gitsigns.nvim",
+		event = "BufRead",
+		config = function()
+			require("gitsigns").setup()
+		end,
+	},
+
+	-- Sneak
+	{
+		"justinmk/vim-sneak",
+		event = "BufRead",
+		config = function()
+			vim.cmd([[let g:sneak#label = 1]])
+			-- ignore case for sneak
+			vim.cmd([[let g:sneak#use_ic_scs = 1]])
+		end,
+	},
+
+	-- Quick Scope
+	{
+		"unblevable/quick-scope",
+		event = "BufRead",
+		config = function()
+			vim.g.qs_highlight_on_keys = { "f", "F", "t", "T" }
+		end,
+	},
+
+	-- word motions
+	{
+		"chaoren/vim-wordmotion",
+		event = "BufRead",
+	},
+
+	-- Undo Tree
+	{
+		"mbbill/undotree",
+		event = "BufRead",
+	},
+
+	-- Move lines and blocks of text via (alt) j/k
+	{
+		"matze/vim-move",
+		event = "BufRead",
+	},
+
+	-- Let's you use `:W` to sudo write a file
+	{
+		"lambdalisue/suda.vim",
+		event = "BufRead",
+	},
+
+	-- Neogit
+	{
+		"NeogitOrg/neogit",
+		dependencies = {
+			"nvim-lua/plenary.nvim", -- required
+			"sindrets/diffview.nvim", -- optional - Diff integration
+
+			"nvim-telescope/telescope.nvim", -- optional
+		},
+		config = true,
+	},
 }
 
 return plugins

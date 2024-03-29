@@ -8,18 +8,19 @@ local autocmd = vim.api.nvim_create_autocmd
 --
 -- d and c should not delete the register
 autocmd("TextYankPost", {
-  pattern = "*",
-  command = "silent! lua vim.highlight.on_yank()",
-})
-
-autocmd("BufReadPost", {
-  pattern = "/srv/http/wordpress/*",
-  callback = function()
-    if vim.fn.filewritable(vim.fn.expand "%") == 2 then
-      vim.bo.readonly = false
-    end
-  end,
+	pattern = "*",
+	command = "silent! lua vim.highlight.on_yank()",
 })
 
 -- for Obsidian
 vim.opt.conceallevel = 2
+
+-- relative line numbers
+vim.opt.relativenumber = true
+
+-- Shortcuts:
+
+autocmd("FileType", {
+	pattern = "markdown",
+	command = "setlocal spell",
+})
