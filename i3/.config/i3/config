@@ -32,9 +32,9 @@ exec --no-startup-id nitrogen --restore
 bindsym $super+Shift+g exec geany
 
 #change volume
-bindsym XF86AudioRaiseVolume exec pulseaudio-ctl up
-bindsym XF86AudioLowerVolume exec pulseaudio-ctl down
-bindsym XF86AudioMute exec pulseaudio-ctl mutj
+bindsym XF86AudioRaiseVolume exec pactl set-sink-volume @DEFAULT_SINK@ +5%
+bindsym XF86AudioLowerVolume exec pactl set-sink-volume @DEFAULT_SINK@ -5%
+bindsym XF86AudioMute exec pactl set-sink-mute @DEFAULT_SINK@ toggle
 
 # change brightness
 bindsym XF86MonBrightnessUp exec brightnessctl set +5%

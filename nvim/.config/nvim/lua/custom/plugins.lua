@@ -50,37 +50,20 @@ local plugins = {
 			require("custom.configs.conform")
 		end,
 	},
-	{
-		"zbirenbaum/copilot.lua",
-		-- Lazy load when event occurs. Events are triggered
-		-- as mentioned in:
-		-- https://vi.stackexchange.com/a/4495/20389
-		event = "InsertEnter",
-		-- You can also have it load at immediately at
-		-- startup by commenting above and uncommenting below:
-		-- lazy = false
-		opts = overrides.copilot,
-	},
+	-- {
+	-- 	"zbirenbaum/copilot.lua",
+	-- 	-- Lazy load when event occurs. Events are triggered
+	-- 	-- as mentioned in:
+	-- 	-- https://vi.stackexchange.com/a/4495/20389
+	-- 	event = "InsertEnter",
+	-- 	-- You can also have it load at immediately at
+	-- 	-- startup by commenting above and uncommenting below:
+	-- 	-- lazy = false
+	-- 	opts = overrides.copilot,
+	-- },
 	{
 		"hrsh7th/nvim-cmp",
-		dependencies = {
-			{
-				"zbirenbaum/copilot-cmp",
-				config = function()
-					require("copilot_cmp").setup()
-				end,
-			},
-		},
-		opts = {
-			sources = {
-				{ name = "copilot", group_index = 2 },
-				{ name = "nvim_lsp", group_index = 2 },
-				{ name = "luasnip", group_index = 2 },
-				{ name = "buffer", group_index = 2 },
-				{ name = "nvim_lua", group_index = 2 },
-				{ name = "path", group_index = 2 },
-			},
-		},
+		opts = require("custom.configs.cmp"),
 	},
 
 	{
@@ -158,26 +141,26 @@ local plugins = {
 		end,
 	},
 
-	{
-		"epwalsh/obsidian.nvim",
-		version = "*", -- recommended, use latest release instead of latest commit
-		lazy = false,
-		ft = "markdown",
-		-- Replace the above line with this if you only want to load obsidian.nvim for markdown files in your vault:
-		-- event = {
-		--   -- If you want to use the home shortcut '~' here you need to call 'vim.fn.expand'.
-		--   -- E.g. "BufReadPre " .. vim.fn.expand "~" .. "/my-vault/**.md"
-		--   "BufReadPre path/to/my-vault/**.md",
-		--   "BufNewFile path/to/my-vault/**.md",
-		-- },
-		dependencies = {
-			-- Required.
-			"nvim-lua/plenary.nvim",
-
-			-- see below for full list of optional dependencies 👇
-		},
-		opts = overrides.obsidian,
-	},
+	-- {
+	-- 	"epwalsh/obsidian.nvim",
+	-- 	version = "*", -- recommended, use latest release instead of latest commit
+	-- 	lazy = false,
+	-- 	ft = "markdown",
+	-- 	-- Replace the above line with this if you only want to load obsidian.nvim for markdown files in your vault:
+	-- 	-- event = {
+	-- 	--   -- If you want to use the home shortcut '~' here you need to call 'vim.fn.expand'.
+	-- 	--   -- E.g. "BufReadPre " .. vim.fn.expand "~" .. "/my-vault/**.md"
+	-- 	--   "BufReadPre path/to/my-vault/**.md",
+	-- 	--   "BufNewFile path/to/my-vault/**.md",
+	-- 	-- },
+	-- 	dependencies = {
+	-- 		-- Required.
+	-- 		"nvim-lua/plenary.nvim",
+	--
+	-- 		-- see below for full list of optional dependencies 👇
+	-- 	},
+	-- 	opts = overrides.obsidian,
+	-- },
 
 	-- helpful for jsx and html
 	{
@@ -206,6 +189,16 @@ local plugins = {
 	-- All NvChad plugins are lazy-loaded by default
 	-- For a plugin to be loaded, you will need to set either `ft`, `cmd`, `keys`, `event`, or set `lazy = false`
 	-- If you want a plugin to load on startup, add `lazy = false` to a plugin spec, for example
+
+	--   select words with Ctrl-N (like Ctrl-d in Sublime Text/VS Code)
+	-- create cursors vertically with Ctrl-Down/Ctrl-Up
+	-- select one character at a time with Shift-Arrows
+	-- press n/N to get next/previous occurrence
+	-- press [/] to select next/previous cursor
+	-- press q to skip current and get next occurrence
+	-- press Q to remove current cursor/selection
+	-- start insert mode with i,a,I,A
+	--
 	{
 		"mg979/vim-visual-multi",
 		lazy = false,
@@ -253,6 +246,18 @@ local plugins = {
 	},
 
 	-- Sneak
+	-- Sneak is invoked with s followed by exactly two characters:
+
+	-- s{char}{char}
+	-- Type sab to move the cursor immediately to the next instance of the text "ab".
+	-- Additional matches, if any, are highlighted until the cursor is moved.
+	-- Type ; to go to the next match (or s again, if s_next is enabled; see :help sneak).
+	-- Type 3; to skip to the third match from the current position.
+	-- Type ctrl-o or `` to go back to the starting point.
+	-- This is a built-in Vim motion; Sneak adds to Vim's jumplist only on s invocation—not repeats—so you can abandon a trail of ; or , by a single ctrl-o or ``.
+	-- Type s<Enter> at any time to repeat the last Sneak-search.
+	-- Type S to search backwards.
+	--
 	{
 		"justinmk/vim-sneak",
 		event = "BufRead",
@@ -290,7 +295,7 @@ local plugins = {
 		event = "BufRead",
 	},
 
-	-- Let's you use `:W` to sudo write a file
+	-- Lets you use `:W` to sudo write a file
 	{
 		"lambdalisue/suda.vim",
 		event = "BufRead",

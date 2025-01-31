@@ -72,8 +72,52 @@ M.general = {
 			function()
 				require("neogit").open({ "commit" })
 			end,
-			"Open [G]it [S]tatus",
+			"Open [G]it [C]ommit",
 		},
+    ["<leader>gn"] = {
+    function()
+        local current_dir = vim.fn.getcwd()
+        require("neogit").open({ cwd = current_dir })
+    end,
+    "Open Neogit in current directory",
+},
+
+		['y"'] = {
+			function()
+				local function copy_inside_quotes()
+					local line = vim.fn.getline(".")
+					local quotes = { '"', "'", "`" }
+
+					for _, quote in ipairs(quotes) do
+						local start, finish = line:find(quote .. ".-" .. quote)
+						if start and finish then
+							local content = line:sub(start + 1, finish - 1)
+							vim.fn.setreg("+", content)
+							print("Copied: " .. content)
+							return
+						end
+					end
+
+					print("No matching quotes found on this line")
+				end
+				copy_inside_quotes()
+			end,
+			"Copy inside quotes/backticks to clipboard (whole line)",
+		},
+
+     ["]e"] = { 
+        function()
+            vim.diagnostic.goto_next({ severity = vim.diagnostic.severity.ERROR })
+        end,
+        "Go to next error"
+    },
+    ["[e"] = { 
+        function()
+            vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.ERROR })
+        end,
+        "Go to previous error"
+    },
+
 	},
 	v = {},
 }
@@ -110,27 +154,100 @@ M.lspconfig = {
 	},
 }
 
-M.obsidian = {
+-- M.obsidian = {
+-- 	n = {
+-- 		["<leader>oc"] = {
+-- 			function()
+-- 				require("obsidian").util.toggle_checkbox()
+-- 			end,
+-- 			"[O]bsidian [C]heckbox",
+-- 		},
+-- 		["<leader>ot"] = {
+-- 			function()
+-- 				require("obsidian").util.toggle_task()
+-- 			end,
+-- 			"[O]bsidian [T]ask",
+-- 		},
+-- 		["<leader>oo"] = { "<cmd>ObsidianOpen<cr>", "[O]bsidian [O]pen" },
+-- 		["<leader>on"] = { "<cmd>ObsidianNew<cr>", "[O]bsidian [N]ew" },
+-- 		["<leader>os"] = { "<cmd>ObsidianSearch<cr>", "[O]bsidian [S]earch" },
+-- 		["<leader>ob"] = { "<cmd>ObsidianBacklinks<cr>", "[O]bsidian [B]acklinks" },
+-- 		["<leader>ol"] = { "<cmd>ObsidianLinks<cr>", "[O]bsidian [L]inks" },
+-- 		["<leader>od"] = { "<cmd>ObsidianDaily<cr>", "[O]bsidian [D]aily" },
+-- 		["<leader>op"] = { "<cmd>ObsidianPreview<cr>", "[O]bsidian [P]review" },
+-- 	},
+-- }
+
+M.vtt = {
+	plugin = true,
+
 	n = {
-		["<leader>oc"] = {
+		["<leader>ns"] = {
 			function()
-				require("obsidian").util.toggle_checkbox()
+				require("custom.vtt").insert_new_subtitle()
 			end,
-			"[O]bsidian [C]heckbox",
+			"Insert new subtitle",
 		},
-		["<leader>ot"] = {
+		["<leader>ts"] = {
 			function()
-				require("obsidian").util.toggle_task()
+				require("custom.vtt").increment_timestamp()
 			end,
-			"[O]bsidian [T]ask",
+			"Increment timestamp by 1s",
 		},
-		["<leader>oo"] = { "<cmd>ObsidianOpen<cr>", "[O]bsidian [O]pen" },
-		["<leader>on"] = { "<cmd>ObsidianNew<cr>", "[O]bsidian [N]ew" },
-		["<leader>os"] = { "<cmd>ObsidianSearch<cr>", "[O]bsidian [S]earch" },
-		["<leader>ob"] = { "<cmd>ObsidianBacklinks<cr>", "[O]bsidian [B]acklinks" },
-		["<leader>ol"] = { "<cmd>ObsidianLinks<cr>", "[O]bsidian [L]inks" },
-		["<leader>od"] = { "<cmd>ObsidianDaily<cr>", "[O]bsidian [D]aily" },
-		["<leader>op"] = { "<cmd>ObsidianPreview<cr>", "[O]bsidian [P]review" },
+		["<leader>tx"] = {
+			function()
+				require("custom.vtt").decrement_timestamp()
+			end,
+			"Decrement timestamp by 1s",
+		},
+		["<leader>tms"] = {
+			function()
+				require("custom.vtt").increment_timestamp_ms()
+			end,
+			"Increment timestamp by 100ms",
+		},
+		["<leader>tmx"] = {
+			function()
+				require("custom.vtt").decrement_timestamp_ms()
+			end,
+			"Decrement timestamp by 100ms",
+		},
+		["<leader>sn"] = {
+			function()
+				require("custom.vtt").next_subtitle()
+			end,
+			"Next subtitle",
+		},
+		["<leader>sp"] = {
+			function()
+				require("custom.vtt").prev_subtitle()
+			end,
+			"Previous subtitle",
+		},
+		["<leader>tt"] = {
+			function()
+				require("custom.vtt").toggle_source_translated()
+			end,
+			"Toggle source/translated text",
+		},
+		["<leader>rf"] = {
+			function()
+				require("custom.vtt").reformat_timestamps()
+			end,
+			"Reformat timestamps",
+		},
+		["<leader>ti"] = {
+			function()
+				require("custom.vtt").increment_timings_from_cursor()
+			end,
+			"Increment timings from cursor",
+		},
+		["<leader>td"] = {
+			function()
+				require("custom.vtt").update_timestamp_duration()
+			end,
+			"Update timestamp duration",
+		},
 	},
 }
 

@@ -62,6 +62,8 @@ M.mason = {
 		"css-lsp",
 		"deno",
 		"eslint_d",
+    -- "eslint-lsp",
+    -- "biome",
 		"html-lsp",
 		"prettierd",
 		"rustywind",
@@ -86,6 +88,11 @@ M.mason = {
 
 		-- misc stuff
 		"codespell",
+
+		--python
+		"python-lsp-server",
+		"pyright",
+		"pylint",
 	},
 }
 
@@ -103,6 +110,11 @@ M.nvimtree = {
 			},
 		},
 	},
+  actions = {
+    remove_file = {
+      close_window = true,
+    },
+  },
 }
 
 M.copilot = {
@@ -126,6 +138,12 @@ M.obsidian = {
 	mappings = mappings.obsidian,
 
 	-- see below for full list of options 👇
+}
+
+M.nvterm = {
+	terminals = {
+		shell = "zsh",
+	},
 }
 
 return M
