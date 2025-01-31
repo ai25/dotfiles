@@ -18,7 +18,7 @@ exec --no-startup-id i3-status -c ~/.config/i3status/config
 exec --no-startup-id syncthing
 
 # start a terminal
-bindsym $super+Return exec kitty -e zsh
+bindsym $super+Return exec ghostty -e zsh
 
 
 # start dmenu (a program launcher)
@@ -26,7 +26,7 @@ bindsym $super+Shift+d exec i3-dmenu-desktop --dmenu="dmenu -i -fn 'Noto Sans:si
 bindsym $super+x exec rofi -lines 12 -padding 18 -width 60 -location 0 -show drun -sidebar-mode -columns 3 -font 'Noto Sans 8'
 
 # common apps keybinds
-bindsym $super+l exec i3lock -i ~/.wallpaper.png
+bindsym $super+Shift+x exec i3lock -i ~/.wallpaper.png
 bindsym $super+Shift+f exec thunar;workspace 3;focus
 exec --no-startup-id nitrogen --restore
 bindsym $super+Shift+g exec geany
@@ -126,20 +126,36 @@ mode "resize" {
 bindsym $super+r mode "resize"
 
 # panel
+# bar {
+#         colors {
+#         background #2f343f
+#         statusline #2f343f
+#         separator #4b5262
+#
+#         # colour of border, background, and text
+#         focused_workspace       #2f343f #bf616a #d8dee8
+#         active_workspace        #2f343f #2f343f #d8dee8
+#         inactive_workspace      #2f343f #2f343f #d8dee8
+#         urgent_workspacei       #2f343f #ebcb8b #2f343f
+#     }
+#
+#         status_command ~/.config/i3status/net-speed.sh
+# }
 bar {
-        colors {
-        background #2f343f
-        statusline #2f343f
-        separator #4b5262
+    status_command i3status
+    position bottom
+    height 30
+    colors {
+        background #1e293b
+        statusline #ffffff
+        separator  #666666
 
-        # colour of border, background, and text
-        focused_workspace       #2f343f #bf616a #d8dee8
-        active_workspace        #2f343f #2f343f #d8dee8
-        inactive_workspace      #2f343f #2f343f #d8dee8
-        urgent_workspacei       #2f343f #ebcb8b #2f343f
+        focused_workspace  #4ade80 #4ade80 #000000
+        active_workspace   #333333 #5f676a #ffffff
+        inactive_workspace #333333 #222222 #ffffff
+        urgent_workspace   #f43f5e #f43f5e #ffffff
+        binding_mode      #f43f5e #f43f5e #ffffff
     }
-
-        status_command ~/.config/i3status/net-speed.sh
 }
 
 # window rules, you can find the window class using xprop
@@ -178,6 +194,12 @@ bindsym $super+Shift+h resize shrink width 10 px or 10 ppt
 bindsym $super+Shift+j resize grow height 10 px or 10 ppt
 bindsym $super+Shift+k resize shrink height 10 px or 10 ppt
 bindsym $super+Shift+l resize grow width 10 px or 10 ppt
+
+# vim-style focus
+bindsym $super+h focus left
+bindsym $super+j focus down
+bindsym $super+k focus up
+bindsym $super+l focus right
 
 # change tiling layout
 bindsym $super+Shift+w layout tabbed

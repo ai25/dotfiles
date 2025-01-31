@@ -1,12 +1,12 @@
 general {
         output_format = "i3bar"
         colors = true
-        markup = pango
+        markup = "pango"
         interval = 1
-        color_good = "#36E592"
-        color_degraded = "#CE9726"
-        color_bad = "#CE4B4F"
-        color_separator = "#B3BEFF"
+        color_good = "#4ade80"      # Green
+        color_degraded = "#fbbf24"  # Yellow
+        color_bad = "#f43f5e"       # Red
+        color_separator = "#cbd5e1"  # Slate
 }
 
 order += "load"
@@ -15,41 +15,40 @@ order += "cpu_temperature 0"
 order += "memory"
 order += "disk /"
 order += "disk /home"
-# order += "ethernet enp1s0"
 order += "wireless wlp0s20f3"
 order += "volume master"
 order += "battery 1"
 order += "tztime local"
 
 load {
-        format = "<span background='#32a852' color='#fff'>  %1min </span>"
+        format = "<span background='#4ade80' color='#052e16' font='JetBrains Mono Nerd Font 11'><span rise='0'> 󰊚 </span>%1min </span>"
 }
 
 cpu_usage {
-      format = "<span background='#5b89ac' color='#fff'>   %usage </span>"
+        format = "<span background='#60a5fa' color='#172554' font='JetBrains Mono Nerd Font 11'><span rise='0'> 󰻠 </span>%usage </span>"
 }
 
 cpu_temperature 0 {
-        format = "<span background='#ef476f' color='#fff'>  %degrees °C </span>"
+        format = "<span background='#fb7185' color='#881337' font='JetBrains Mono Nerd Font 11'><span rise='0'> 󰔏 </span>%degrees°C </span>"
         path = "/sys/class/thermal/thermal_zone0/temp"
 }
 
 disk "/" {
-        format = "<span background='#ffd166'> / %free %avail </span>"
+        format = "<span background='#fbbf24' color='#78350f' font='JetBrains Mono Nerd Font 11'><span rise='0'> 󰋊 </span>%free </span>"
 }
 
 disk "/home" {
-        format = "<span background='#06d6a0'> /home %free %avail </span>"
+        format = "<span background='#a78bfa' color='#2e1065' font='JetBrains Mono Nerd Font 11'><span rise='0'> 󱂵 </span>%free </span>"
 }
 
 wireless wlp0s20f3 {
-        format_up = "<span background='#073b4c' color='#fff'>  WiFi   %quality  %essid   %bitrate   %ip </span>"
-        format_down = "<span background='#073b4c' color='#fff'>  WiFi   Disconnected </span>"
+        format_up = "<span background='#a78bfa' color='#2e1065' font='JetBrains Mono Nerd Font 11'><span rise='0'> 󰖩 </span>%quality %essid </span>"
+        format_down = "<span background='#f43f5e' color='#ffffff' font='JetBrains Mono Nerd Font 11'><span rise='0'> 󰖪 </span>Down </span>"
 }
 
 volume master {
-        format = "<span background='#115ab2' color='#fff'>   %volume </span>"
-        format_muted = "<span background='#beb976' >   %volume </span>"
+        format = "<span background='#38bdf8' color='#083344' font='JetBrains Mono Nerd Font 11'><span rise='0'> 󰕾 </span>%volume </span>"
+        format_muted = "<span background='#94a3b8' color='#1e293b' font='JetBrains Mono Nerd Font 11'><span rise='0'> 󰖁 </span>Muted </span>"
         device = "default"
         mixer = "Master"
         mixer_idx = 0
@@ -57,20 +56,19 @@ volume master {
 
 battery 1 {
         last_full_capacity = true
-        format = "<span background='#52b788'>    %status %percentage </span>"
-        format_down = "<span background='#52b788'>    Disconnected </span>"
-        status_bat = "BAT"
-        status_chr = "AC"
-        status_full = "Full"
+        format = "<span background='#4ade80' color='#052e16' font='JetBrains Mono Nerd Font 11'><span rise='0'> %status </span>%percentage </span>"
+        format_down = "<span background='#f43f5e' color='#ffffff' font='JetBrains Mono Nerd Font 11'><span rise='0'>  </span>No Battery </span>"
+        status_chr = "󰂄"
+        status_bat = "󰁹"
+        status_full = "󰁹"
         path = "/sys/class/power_supply/BAT%d/uevent"
         low_threshold = 10
 }
 
 tztime local {
-        format = "<span background='#1d3461' color='#fff'>   %a, %d %b %H:%M:%S </span>"
+        format = "<span background='#0ea5e9' color='#000000' font='JetBrains Mono Nerd Font 11'><span rise='0'> 󰅐 </span>%a, %d %b %H:%M:%S </span>"
 }
 
 memory {
-        format = "<span background='#abedd8'>  %free / %total </span>"
+        format = "<span background='#a5b4fc' color='#1e1b4b' font='JetBrains Mono Nerd Font 11'><span rise='0'> 󰍛 </span>%free </span>"
 }
-
