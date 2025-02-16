@@ -16,9 +16,10 @@ exec --no-startup-id xsettingsd &
 exec --no-startup-id compton -b
 exec --no-startup-id i3-status -c ~/.config/i3status/config
 exec --no-startup-id syncthing
+exec --no-startup-id ghostty --initial-window=false --quit-after-last-window-closed=false -e zsh
 
 # start a terminal
-bindsym $super+Return exec ghostty -e zsh
+bindsym $super+Return exec ghostty --quit-after-last-window-closed=false --gtk-single-instance=true -e zsh
 
 
 # start dmenu (a program launcher)

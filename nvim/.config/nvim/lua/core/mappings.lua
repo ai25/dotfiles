@@ -49,6 +49,10 @@ M.general = {
 			end,
 			"LSP formatting",
 		},
+
+		["<C-y>"] = { "10k", "Move up 10 lines", opts = { noremap = true } },
+		["<C-e>"] = { "10j", "Move down 10 lines", opts = { noremap = true } },
+		["<leader>sw"] = { ":SudaWrite<CR>" },
 	},
 
 	t = {

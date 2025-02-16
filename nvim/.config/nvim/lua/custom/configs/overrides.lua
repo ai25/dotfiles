@@ -62,14 +62,20 @@ M.mason = {
 		"css-lsp",
 		"deno",
 		"eslint_d",
-    -- "eslint-lsp",
-    -- "biome",
+		-- "eslint-lsp",
+		-- "biome",
 		"html-lsp",
 		"prettierd",
 		"rustywind",
 		"stylelint",
 		"typescript-language-server",
 		"json-lsp",
+		"cssls",
+		"ts_ls",
+		"tailwindcss",
+		"tailwindcss-language-server",
+		"tinymist",
+		"marksman",
 
 		"markdownlint",
 		"mdx-analyzer",
@@ -110,11 +116,11 @@ M.nvimtree = {
 			},
 		},
 	},
-  actions = {
-    remove_file = {
-      close_window = true,
-    },
-  },
+	actions = {
+		remove_file = {
+			close_window = true,
+		},
+	},
 }
 
 M.copilot = {
@@ -147,3 +153,4 @@ M.nvterm = {
 }
 
 return M
+

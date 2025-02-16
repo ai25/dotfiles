@@ -6,7 +6,7 @@ autocmd("TextYankPost", {
 	command = "silent! lua vim.highlight.on_yank()",
 })
 
-vim.opt.number = true        -- Show current line number
+vim.opt.number = true -- Show current line number
 vim.opt.relativenumber = true -- Show relative line numbers
 
 -- Shortcuts:
@@ -18,18 +18,17 @@ autocmd("FileType", {
 
 -- Set filetype detection for .vtt files
 vim.filetype.add({
-    extension = {
-        vtt = "vtt",
-    },
+	extension = {
+		vtt = "vtt",
+	},
 })
-
 
 -- Set up an autocommand to call set_vtt_mappings when opening a .vtt file
 vim.api.nvim_create_autocmd("FileType", {
-  pattern = "vtt",
-  callback = function()
-    require("core.utils").load_mappings("vtt")
-  end,
+	pattern = "vtt",
+	callback = function()
+		require("core.utils").load_mappings("vtt")
+	end,
 })
 
 -- Set up statuscolumn

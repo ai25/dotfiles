@@ -62,8 +62,20 @@ local plugins = {
 	-- 	opts = overrides.copilot,
 	-- },
 	{
+		"onsails/lspkind.nvim",
+		lazy = false,
+		priority = 1000, -- Add high priority to ensure it loads early
+	},
+	{
 		"hrsh7th/nvim-cmp",
-		opts = require("custom.configs.cmp"),
+		dependencies = {
+			"onsails/lspkind.nvim",
+			{ "roobert/tailwindcss-colorizer-cmp.nvim", config = true },
+			"tailwind-tools.nvim",
+		},
+		opts = function()
+			return require("custom.configs.cmp")
+		end,
 	},
 
 	{
@@ -92,9 +104,27 @@ local plugins = {
 
 	{
 		"karb94/neoscroll.nvim",
-		keys = { "<C-d>", "<C-u>" },
+		keys = {
+			"<C-u>",
+			"<C-d>",
+			"<C-b>",
+			"<C-f>",
+			"zt",
+			"zz",
+			"zb",
+		},
 		config = function()
-			require("neoscroll").setup()
+			require("neoscroll").setup({
+				mappings = { -- Keys to be mapped to their corresponding default scrolling animation
+					"<C-u>",
+					"<C-d>",
+					"<C-b>",
+					"<C-f>",
+					"zt",
+					"zz",
+					"zb",
+				},
+			})
 		end,
 	},
 	{
@@ -176,6 +206,11 @@ local plugins = {
 		config = function()
 			require("colorizer").setup()
 		end,
+		opts = {
+			user_default_options = {
+				tailwind = true,
+			},
+		},
 	},
 	--autopairs
 	{
@@ -311,6 +346,46 @@ local plugins = {
 			"nvim-telescope/telescope.nvim", -- optional
 		},
 		config = true,
+	},
+	{
+		"luckasRanarison/tailwind-tools.nvim",
+		lazy = false,
+		dependencies = { "nvim-treesitter/nvim-treesitter" },
+		---@type TailwindTools.Option
+		opts = {
+			document_color = {
+				enabled = true, -- can be toggled by commands
+				kind = "inline", -- "inline" | "foreground" | "background"
+				inline_symbol = "󰝤 ", -- only used in inline mode
+				debounce = 200, -- in milliseconds, only applied in insert mode
+			},
+			conceal = {
+				enabled = false, -- can be toggled by commands
+				min_length = nil, -- only conceal classes exceeding the provided length
+				symbol = "󱏿", -- only a single character is allowed
+				highlight = { -- extmark highlight options, see :h 'highlight'
+					fg = "#38BDF8",
+				},
+			},
+			custom_filetypes = {}, -- see the extension section to learn how it works
+			cmp = {
+				highlight = "foreground", -- color preview style, "foreground" | "background"
+			},
+			telescope = {
+				utilities = {
+					callback = function(name, class) end, -- callback used when selecting an utility class in telescope
+				},
+			},
+			-- see the extension section to learn more
+			extension = {
+				queries = {}, -- a list of filetypes having custom `class` queries
+				patterns = { -- a map of filetypes to Lua pattern lists
+					-- example:
+					-- rust = { "class=[\"']([^\"']+)[\"']" },
+					-- javascript = { "clsx%(([^)]+)%)" },
+				},
+			},
+		},
 	},
 }
 

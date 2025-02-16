@@ -70,5 +70,4 @@ tztime local {
 }
 
 memory {
-        format = "<span background='#a5b4fc' color='#1e1b4b' font='JetBrains Mono Nerd Font 11'><span rise='0'> 󰍛 </span>%free </span>"
-}
+        format = "<span background='#a5b4fc' color='#1e1b4b' font='JetBrains Mono Nerd Font 11'><span rise='0'> 󰍛 </span>%free </span>" }
