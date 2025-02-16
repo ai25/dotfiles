@@ -387,6 +387,11 @@ local plugins = {
 			},
 		},
 	},
+
+	{
+		"elkowar/yuck.vim",
+		event = "VeryLazy",
+	},
 }
 
 return plugins

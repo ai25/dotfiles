@@ -14,8 +14,7 @@
 (defpoll NETWORK_DOWN :interval "1s" "scripts/network --down")
 (defpoll BATTERY :interval "10s" "scripts/battery --percentage")
 (defpoll BATTERY_STATUS :interval "10s" "scripts/battery --status")
-(defpoll TIME :interval "1s" "date '+%H:%M:%S'")
-(defpoll DATE :interval "1m" "date '+%b %d, %Y'")
+(defpoll DATETIME :interval "1s" "date '+%H:%M:%S %a, %b %d, %Y'")
 
 ;; Main bar widget
 (defwidget bar []
@@ -108,10 +107,10 @@
        :orientation "h"
        :space-evenly false
        :spacing 4
-    (label :text {volume[0] == "muted" ? "󰝟" :
-                  volume[1] == "0" ? "󰕿" :
-                  volume[1] < "30" ? "󰖀" :
-                  volume[1] < "70" ? "󰕾" : "󰕾"})
+    (label :text {volume[0] == "muted" ? "󰝟 " :
+                  volume[1] == "0" ? "󰕿 " :
+                  volume[1] < "30" ? "󰖀 " :
+                  volume[1] < "70" ? "󰕾 " : "󰕾 "})
     (label :text {volume[0] == "muted" ? "muted" : "${volume[1]}%"})))
 
 
@@ -134,7 +133,7 @@
        :space-evenly false
        :spacing 4
     (label :text "󰥔 ")
-    (label :text "${TIME} ${DATE}")))
+    (label :text "${DATETIME}")))
 
 ;; Windows
 (defwindow bar
