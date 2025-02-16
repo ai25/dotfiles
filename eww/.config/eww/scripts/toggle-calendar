@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Toggle calendar visibility
+calendar_visible=$(eww get calendar_visible)
+
+if [[ "$calendar_visible" == "true" ]]; then
+    eww close calendar calendar-closer
+    eww update calendar_visible=false
+else
+    eww open calendar
+    eww open calendar-closer
+    eww update calendar_visible=true
+fi

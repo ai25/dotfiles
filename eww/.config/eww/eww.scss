@@ -160,3 +160,43 @@ $module-padding: 0.5rem 1rem;
     }
   }
 }
+
+// Calendar
+.calendar-module {
+  background-color: rgba(26, 26, 26, 0.85);
+  border-radius: 10px;
+  padding: 1rem;
+  
+  calendar {
+    padding: 5px;
+    
+    :selected {
+      color: #1e1e2e;
+      background-color: #4ade80;
+      border-radius: 4px;
+    }
+    
+    .header {
+      color: #4ade80;
+      font-weight: bold;
+    }
+    
+    .button {
+      color: #a855f7;
+      
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+      }
+    }
+    
+    .highlight {
+      color: #4ade80;
+      font-weight: bold;
+    }
+    
+    :indeterminate {
+      color: rgba(255, 255, 255, 0.3);
+    }
+  }
+}

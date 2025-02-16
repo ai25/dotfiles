@@ -16,6 +16,11 @@
 (defpoll BATTERY_STATUS :interval "10s" "scripts/battery --status")
 (defpoll DATETIME :interval "1s" "date '+%H:%M:%S %a, %b %d, %Y'")
 
+(defvar calendar_visible false)
+(defpoll calendar_day :interval "1m" "date '+%d'")
+(defpoll calendar_month :interval "1m" "date '+%m'")
+(defpoll calendar_year :interval "1m" "date '+%Y'")
+
 ;; Main bar widget
 (defwidget bar []
   (box :orientation "h"
@@ -128,12 +133,13 @@
     (label :text "${BATTERY}%")))
 
 (defwidget time-module []
-  (box :class "module time"
-       :orientation "h"
-       :space-evenly false
-       :spacing 4
-    (label :text "󰥔 ")
-    (label :text "${DATETIME}")))
+  (eventbox :onclick "scripts/toggle-calendar"
+    (box :class "module time"
+         :orientation "h"
+         :space-evenly false
+         :spacing 4
+      (label :text "󰥔 ")
+      (label :text "${DATETIME}"))))
 
 ;; Windows
 (defwindow bar
@@ -177,3 +183,33 @@
                        :height "40px" 
                        :anchor "center")
     (progressBar :icon barIcon :percent barPercent))
+
+(defwidget calendar-module []
+  (box :class "calendar-module"
+       :orientation "v"
+    (calendar :class "calendar"
+             :day calendar_day
+             :month calendar_month
+             :year calendar_year)))
+
+(defwindow calendar
+    :monitor 0
+    :geometry (geometry :x "1%" 
+                       :y "1%" 
+                       :width "270px" 
+                       :height "200px"
+                       :anchor "top right")
+    :stacking "overlay"
+    :focusable false
+    :exclusive false
+    (calendar-module))
+
+(defwindow calendar-closer
+  :monitor 0
+  :geometry (geometry :width "100%" 
+                     :height "100%" 
+                     :anchor "center")
+  :stacking "fg"
+  :focusable false
+  :exclusive false
+  (eventbox :onclick "eww update calendar_visible=false" ))
