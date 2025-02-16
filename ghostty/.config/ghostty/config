@@ -74,6 +74,9 @@ font-size = 11
 theme = one-dark
 window-theme = ghostty
 window-decoration = none
+confirm-close-surface = false
+confirm-window-close = false
+
 keybind = alt+tab=toggle_tab_overview
 
 # Split Controls (using Alt for splits to avoid conflicts)

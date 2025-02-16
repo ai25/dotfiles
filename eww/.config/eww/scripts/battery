@@ -1,0 +1,12 @@
+#!/bin/bash
+
+case $1 in
+    "--percentage")
+        # Get battery percentage
+        cat /sys/class/power_supply/BAT0/capacity 2>/dev/null || echo "100"
+        ;;
+    "--status")
+        # Get battery status
+        cat /sys/class/power_supply/BAT0/status 2>/dev/null || echo "Full"
+        ;;
+esac

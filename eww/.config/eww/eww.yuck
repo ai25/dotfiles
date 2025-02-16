@@ -1,0 +1,180 @@
+;; Variables
+(deflisten workspaces :initial "[]"
+  "bash ~/.config/eww/scripts/get-workspaces")
+
+(deflisten volume :initial "[]" "bash ~/.config/eww/scripts/get-volume")
+
+(deflisten wifi :initial "{\"ssid\": \"Disconnected\", \"strength\": 0}"
+  "bash ~/.config/eww/scripts/wifi")
+
+(defpoll CPU_USAGE :interval "1s" "scripts/cpu --usage")
+(defpoll CPU_TEMP :interval "1s" "scripts/cpu --temp")
+(defpoll CPU_LOAD :interval "1s" "scripts/cpu --load")
+(defpoll NETWORK_UP :interval "1s" "scripts/network --up")
+(defpoll NETWORK_DOWN :interval "1s" "scripts/network --down")
+(defpoll BATTERY :interval "10s" "scripts/battery --percentage")
+(defpoll BATTERY_STATUS :interval "10s" "scripts/battery --status")
+(defpoll TIME :interval "1s" "date '+%H:%M:%S'")
+(defpoll DATE :interval "1m" "date '+%b %d, %Y'")
+
+;; Main bar widget
+(defwidget bar []
+  (box :orientation "h"
+       :space-evenly false
+            :class "bar"
+    (workspaces)
+    (box :hexpand true)
+    (system-info)
+    ))
+
+(defwidget workspaces []
+  (box :class "workspaces"
+       :orientation "h"
+       :space-evenly true
+       :halign "start"
+       :spacing 8
+    (for workspace in workspaces
+      (button 
+        :onclick "hyprctl dispatch workspace ${workspace.id}" 
+        :class "workspace-btn ${workspace.focused ? 'current' : ''}"
+        "${workspace.id}"))))
+
+(defwidget system-info []
+  (box :class "system-info"
+       :orientation "h"
+       :space-evenly false
+       :halign "end"
+       :spacing 16
+    (cpu-module)
+    (memory-module)
+    (disk-module)
+    (network-module)
+    (wifi-module)
+    (volume-module)
+    (battery-module)
+    (time-module)))
+
+(defwidget cpu-module []
+  (box :class "module cpu"
+       :orientation "h"
+       :space-evenly false
+       :spacing 4
+    (label :text "󰻠 ")
+    (label :text "${CPU_USAGE}%")
+    (label :text "${CPU_TEMP}°C")))
+
+(defwidget memory-module []
+  (box :class "module memory"
+       :orientation "h"
+       :space-evenly false
+       :spacing 4
+    (label :text "󰍛 ")
+    (label :text "${round(EWW_RAM.used_mem_perc, 0)}%")))
+
+(defwidget disk-module []
+  (box :class "module disk"
+       :orientation "h"
+       :space-evenly false
+       :spacing 4
+    (label :text "󰋊 ")
+    (label :text "/ ${round((1 - (EWW_DISK['/'].free / EWW_DISK['/'].total)) * 100, 0)}% /home ${round((1 - (EWW_DISK['/home'].free / EWW_DISK['/home'].total)) * 100, 0)}%")))
+
+(defwidget network-module []
+  (box :class "module network"
+       :orientation "h"
+       :space-evenly false
+       :spacing 4
+    (label :text "󰀂 ")
+    (label :text "󰕒 ${NETWORK_UP} 󰇚 ${NETWORK_DOWN}")))
+
+(defwidget wifi-module []
+  (box :class "module wifi"
+       :orientation "h"
+       :space-evenly false
+       :spacing 4
+    (label :text {wifi.strength >= 80 ? "󰤨 " :
+                  wifi.strength >= 60 ? "󰤥 " :
+                  wifi.strength >= 40 ? "󰤢 " :
+                  wifi.strength >= 20 ? "󰤟 " : "󰤯 "})
+    (box :orientation "h"
+         :space-evenly false
+         :spacing 8
+      (label :text {wifi.ssid})
+      (label :class "ip" :text {wifi.ip != "" ? "(" + wifi.ip + ")" : ""}))))
+
+
+(defwidget volume-module []
+  (box :class "module volume"
+       :orientation "h"
+       :space-evenly false
+       :spacing 4
+    (label :text {volume[0] == "muted" ? "󰝟" :
+                  volume[1] == "0" ? "󰕿" :
+                  volume[1] < "30" ? "󰖀" :
+                  volume[1] < "70" ? "󰕾" : "󰕾"})
+    (label :text {volume[0] == "muted" ? "muted" : "${volume[1]}%"})))
+
+
+(defwidget battery-module []
+  (box :class "module battery"
+       :orientation "h"
+       :space-evenly false
+       :spacing 4
+    (label :text {BATTERY_STATUS == "Charging" ? "󰂄" : 
+                  BATTERY_STATUS == "Full" ? "󰁹" :
+                  BATTERY < 20 ? "󰁻" :
+                  BATTERY < 40 ? "󰁽" :
+                  BATTERY < 60 ? "󰁿" :
+                  BATTERY < 80 ? "󰂁" : "󰁹"})
+    (label :text "${BATTERY}%")))
+
+(defwidget time-module []
+  (box :class "module time"
+       :orientation "h"
+       :space-evenly false
+       :spacing 4
+    (label :text "󰥔 ")
+    (label :text "${TIME} ${DATE}")))
+
+;; Windows
+(defwindow bar
+  :monitor 0
+  :geometry (geometry :x "0%"
+                     :y "0px"
+                     :width "100%"
+                     :height "24px"
+                     :anchor "top center")
+  :stacking "bg"
+  :exclusive true
+  :focusable false
+  :reserve (struts :distance "40px" :side "top")
+  :windowtype "dock"
+  (bar))
+
+(defvar barIcon "󰃠")
+(defvar barPercent 0)
+(defvar barCount 0)
+
+;; Widgets
+(defwidget progressBar [icon percent]
+    (box
+        :class "progressBar"
+        :orientation "h"
+        :halign "center"
+        :valign "center"
+        :space-evenly false
+        (label :text icon :yalign 0.5 :valign "center")
+        (progress :valign "center" 
+                 :flipped false 
+                 :value percent 
+                 :orientation "h")))
+
+(defwindow overlay
+    :monitor 0
+    :stacking "overlay"
+    :focusable false
+    :exclusive false
+    :geometry (geometry :width "170px" 
+                       :height "40px" 
+                       :anchor "center")
+    (progressBar :icon barIcon :percent barPercent))

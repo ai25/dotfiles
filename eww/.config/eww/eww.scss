@@ -1,0 +1,162 @@
+// Base Colors
+$base-color: #1e1e2e;
+$surface-0: #313244;
+$surface-1: #45475a;
+$surface-2: #585b70;
+
+// Component Colors - Pastel Versions
+$color-cpu: #98e8ac;   
+$color-memory: #c4a6ff;
+$color-disk: #ffb3c0;  
+$color-network: #c4e3ff;
+$color-wifi: #7ad7ff;    
+$color-volume: #e2a2ff;   
+$color-battery: #a8ff80;   
+$color-time: #7aecd5;   
+$color-current-workspace: #98e8ac;
+
+
+// Common Values
+$bg-opacity: 0.1;
+$transition-speed: 200ms;
+$border-radius-sm: 4px;
+$border-radius-lg: 10px;
+$font-size-sm: 12px;
+$font-size-base: 14px;
+$module-padding: 0.5rem 1rem;
+
+// Base Styles
+* {
+  all: unset;
+  font-family: "JetBrainsMono Nerd Font";
+  font-size: $font-size-base;
+  transition: $transition-speed;
+}
+
+// Layout Components
+.bar {
+  background-color: rgba(26, 26, 26, 0.85);
+  padding: 6px;
+  margin: 0;
+}
+
+.module {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: $border-radius-lg;
+  padding: $module-padding;
+  margin: 0;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+  transition: all $transition-speed ease;
+}
+
+.small {
+  font-size: $font-size-sm;
+  opacity: 0.8;
+}
+
+// Workspaces
+.workspaces {
+  padding: 0 0.3rem;
+  
+  button {
+    min-width: 1.2rem;
+    min-height: 1.2rem;
+    border-radius: $border-radius-sm;
+    margin: 0 0.15rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: $font-size-sm;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+    transition: all $transition-speed ease;
+  }
+  
+  .current {
+    background-color: rgba($color-current-workspace, $bg-opacity);
+    color: $color-current-workspace;
+  }
+}
+
+// System Modules
+.system-info {
+  background: transparent;
+}
+
+.cpu {
+  background-color: rgba($color-cpu, $bg-opacity);
+  color: $color-cpu;
+}
+
+.memory {
+  background-color: rgba($color-memory, $bg-opacity);
+  color: $color-memory;
+}
+
+.disk {
+  background-color: rgba($color-disk, $bg-opacity);
+  color: $color-disk;
+}
+
+.network {
+  background-color: rgba($color-network, $bg-opacity);
+  color: $color-network;
+}
+
+.wifi {
+  background-color: rgba($color-wifi, $bg-opacity);
+  color: $color-wifi;
+  
+  .ip {
+    opacity: 0.8;
+    font-size: $font-size-sm;
+  }
+}
+
+.volume {
+  background-color: rgba($color-volume, $bg-opacity);
+  color: $color-volume;
+}
+
+.battery {
+  background-color: rgba($color-battery, $bg-opacity);
+  color: $color-battery;
+}
+
+.time {
+  background-color: rgba($color-time, $bg-opacity);
+  color: $color-time;
+}
+
+// Status Section
+.status {
+  padding-right: 1rem;
+}
+
+// Progress Bar Component
+.progressBar {
+  $progress-border-radius: 50px;
+  $progress-height: 11px;
+  
+  background: $base-color;
+  padding: 2px 8px;
+  border-radius: $progress-border-radius;
+  
+  label {
+    color: $color-network;
+    margin-right: 10px;
+    font-size: 20px;
+  }
+  
+  progressbar {
+    trough {
+      min-width: 200px;
+      min-height: $progress-height;
+      background: $surface-1;
+      border-radius: $progress-border-radius;
+      
+      progress {
+        background: $color-network;
+        border-radius: $progress-border-radius;
+        min-height: $progress-height;
+      }
+    }
+  }
+}
