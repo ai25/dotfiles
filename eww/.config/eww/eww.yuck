@@ -124,12 +124,20 @@
        :orientation "h"
        :space-evenly false
        :spacing 4
-    (label :text {BATTERY_STATUS == "Charging" ? "󰂄" : 
-                  BATTERY_STATUS == "Full" ? "󰁹" :
-                  BATTERY < 20 ? "󰁻" :
-                  BATTERY < 40 ? "󰁽" :
-                  BATTERY < 60 ? "󰁿" :
-                  BATTERY < 80 ? "󰂁" : "󰁹"})
+    (label :text {BATTERY_STATUS == "Charging" ? "󰂄 " : 
+                  BATTERY_STATUS == "Full" ? "󰁹 " :
+                  BATTERY_STATUS == "Not charging" ? (
+                    BATTERY < 20 ? "󰁺 " :
+                    BATTERY < 40 ? "󰁼 " :
+                    BATTERY < 60 ? "󰁾 " :
+                    BATTERY < 80 ? "󰂀 " : "󰚥 "
+                  ) :
+                  BATTERY_STATUS == "Discharging" ? (
+                    BATTERY < 20 ? "󰁻 " :
+                    BATTERY < 40 ? "󰁽 " :
+                    BATTERY < 60 ? "󰁿 " :
+                    BATTERY < 80 ? "󰂁 " : "󰁹 "
+                  ) : "󰂃"})  ; Default/unknown status
     (label :text "${BATTERY}%")))
 
 (defwidget time-module []
