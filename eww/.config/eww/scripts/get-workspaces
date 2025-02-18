@@ -1,47 +1,59 @@
 #!/bin/bash
 
 get_workspaces() {
-    # Get active workspace, ensure it's a positive number
-    active=$(hyprctl activeworkspace -j | jq '.id | select(. > 0)')
-    if [ -z "$active" ]; then
-        active=1
+  # Get active workspace
+  active=$(hyprctl activeworkspace -j | jq '.id')
+  active_special=$(hyprctl activewindow -j | jq -r '.workspace.name' | grep -q "special:" && echo "true" || echo "false")
+
+  # Separate arrays for regular and special workspaces
+  regular_spaces=()
+  special_spaces=()
+
+  # Process all workspaces
+  while IFS= read -r workspace; do
+    id=$(echo "$workspace" | jq -r '.id')
+    name=$(echo "$workspace" | jq -r '.name')
+
+    # Skip empty lines
+    [ -z "$id" ] && continue
+
+    # Check if it's a special workspace
+    if [[ "$name" == special* ]]; then
+      special_num=$((101 + id))
+      display_name="S${special_num}"
+
+      if [ "$id" = "$active" ] && [ "$active_special" = "true" ]; then
+        special_spaces+=("{\"id\":$id,\"focused\":true,\"special\":true,\"name\":\"$display_name\"}")
+      else
+        special_spaces+=("{\"id\":$id,\"focused\":false,\"special\":true,\"name\":\"$display_name\"}")
+      fi
+    else
+      if [ "$id" = "$active" ] && [ "$active_special" = "false" ]; then
+        regular_spaces+=("{\"id\":$id,\"focused\":true,\"special\":false,\"name\":\"$id\"}")
+      else
+        regular_spaces+=("{\"id\":$id,\"focused\":false,\"special\":false,\"name\":\"$id\"}")
+      fi
     fi
-    
-    spaces="["
-    first=1
-    
-    # Get all workspaces and construct JSON
-    while IFS= read -r id; do
-        # Skip empty lines or negative numbers
-        [ -z "$id" ] && continue
-        [ "$id" -lt 1 ] && continue
-        
-        # Add comma if not first item
-        if [ $first -eq 0 ]; then
-            spaces+=","
-        fi
-        first=0
-        
-        # Add the workspace with its focused state
-        if [ "$id" = "$active" ]; then
-            spaces+="{\"id\":$id,\"focused\":true}"
-        else
-            spaces+="{\"id\":$id,\"focused\":false}"
-        fi
-    done < <(hyprctl workspaces -j | jq -r '.[].id' | sort -n)
-    
-    spaces+="]"
-    echo "$spaces"
+  done < <(hyprctl workspaces -j | jq -c '.[]' | sort -V)
+
+  # Combine arrays with regular workspaces first
+  spaces=("${regular_spaces[@]}" "${special_spaces[@]}")
+
+  # Output JSON array
+  printf "[%s]\n" "$(
+    IFS=,
+    echo "${spaces[*]}"
+  )"
 }
 
 # Initial state
 get_workspaces
 
 # Monitor workspace changes
-socat -U - UNIX-CONNECT:"$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock" | while read -r line; do
-    case ${line%>>*} in
-        workspace*|createworkspace*|destroyworkspace*|moveworkspace*)
-            get_workspaces
-            ;;
-    esac
+socat -U - "UNIX-CONNECT:$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock" | while read -r line; do
+  case ${line%>>*} in
+  workspace* | createworkspace* | destroyworkspace* | moveworkspace* | activewindow*)
+    get_workspaces
+    ;;
+  esac
 done

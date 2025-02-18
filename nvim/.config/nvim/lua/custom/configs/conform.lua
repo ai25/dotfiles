@@ -26,6 +26,7 @@ local options = {
 		-- Use the "_" filetype to run formatters on filetypes that don't
 		-- have other formatters configured.
 		["_"] = { "trim_whitespace" },
+    kotlin = { "ktlint" }
 	},
 
 	-- adding same formatter for multiple filetypes can look too much work for some

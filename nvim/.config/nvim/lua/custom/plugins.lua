@@ -330,10 +330,9 @@ local plugins = {
 		event = "BufRead",
 	},
 
-	-- Lets you use `:W` to sudo write a file
 	{
 		"lambdalisue/suda.vim",
-		event = "BufRead",
+		event = "VeryLazy",
 	},
 
 	-- Neogit

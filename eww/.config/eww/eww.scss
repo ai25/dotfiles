@@ -5,15 +5,16 @@ $surface-1: #45475a;
 $surface-2: #585b70;
 
 // Component Colors - Pastel Versions
-$color-cpu: #98e8ac;   
+$color-cpu: #98e8ac;
 $color-memory: #c4a6ff;
-$color-disk: #ffb3c0;  
+$color-disk: #ffb3c0;
 $color-network: #c4e3ff;
-$color-wifi: #7ad7ff;    
-$color-volume: #e2a2ff;   
-$color-battery: #a8ff80;   
-$color-time: #7aecd5;   
+$color-wifi: #7ad7ff;
+$color-volume: #e2a2ff;
+$color-battery: #a8ff80;
+$color-time: #7aecd5;
 $color-current-workspace: #98e8ac;
+$color-danger: #f84444;
 
 
 // Common Values
@@ -38,6 +39,7 @@ $module-padding: 0.5rem 1rem;
   background-color: rgba(26, 26, 26, 0.85);
   padding: 6px;
   margin: 0;
+
 }
 
 .module {
@@ -47,6 +49,7 @@ $module-padding: 0.5rem 1rem;
   margin: 0;
   box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
   transition: all $transition-speed ease;
+
 }
 
 .small {
@@ -57,7 +60,7 @@ $module-padding: 0.5rem 1rem;
 // Workspaces
 .workspaces {
   padding: 0 0.3rem;
-  
+
   button {
     min-width: 1.2rem;
     min-height: 1.2rem;
@@ -68,10 +71,32 @@ $module-padding: 0.5rem 1rem;
     box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
     transition: all $transition-speed ease;
   }
-  
+
   .current {
     background-color: rgba($color-current-workspace, $bg-opacity);
     color: $color-current-workspace;
+  }
+}
+
+.special-workspaces {
+  padding: 0 0.3rem;
+  margin-left: 0.6rem;
+
+  button {
+    min-width: 1.2rem;
+    min-height: 1.2rem;
+    border-radius: 4px;
+    margin: 0 0.15rem;
+    color: rgba(255, 255, 255, 0.6);
+    min-width: 1rem;
+    min-height: 1rem;
+    font-size: 6px;
+
+
+    &.current {
+      background-color: #f4a461;
+      color: #1e1e2e;
+    }
   }
 }
 
@@ -93,6 +118,34 @@ $module-padding: 0.5rem 1rem;
 .disk {
   background-color: rgba($color-disk, $bg-opacity);
   color: $color-disk;
+  .label {
+    color: rgba($color-disk, 0.8);
+    font-size: 12px;
+    padding: 0px 8px;
+    border: 1px solid rgba($color-disk, 0.2);
+    background-color: rgba($color-disk, 0.1);
+    border-radius: 9px;
+  }
+  .value {
+  }
+  .divider {
+    border-right: 1px solid rgba($color-disk, 0.15);
+    margin:0px 4px;
+  }
+  progressbar {
+    trough {
+      min-width: 40px;
+      min-height: 10px;
+      background-color: rgba($color-disk, 0.15);
+      border-radius: 4px;
+
+      progress {
+        background-color: #ffb3c0;
+        border-radius: 4px;
+        min-height: 10px;
+      }
+    }
+  }
 }
 
 .network {
@@ -103,7 +156,7 @@ $module-padding: 0.5rem 1rem;
 .wifi {
   background-color: rgba($color-wifi, $bg-opacity);
   color: $color-wifi;
-  
+
   .ip {
     opacity: 0.8;
     font-size: $font-size-sm;
@@ -118,7 +171,12 @@ $module-padding: 0.5rem 1rem;
 .battery {
   background-color: rgba($color-battery, $bg-opacity);
   color: $color-battery;
+  &.danger {
+  color: $color-danger;
+  background-color: rgba($color-danger, $bg-opacity);
 }
+}
+
 
 .time {
   background-color: rgba($color-time, $bg-opacity);
@@ -130,28 +188,29 @@ $module-padding: 0.5rem 1rem;
   padding-right: 1rem;
 }
 
+
 // Progress Bar Component
 .progressBar {
   $progress-border-radius: 50px;
   $progress-height: 11px;
-  
+
   background: $base-color;
   padding: 2px 8px;
   border-radius: $progress-border-radius;
-  
+
   label {
     color: $color-network;
     margin-right: 10px;
     font-size: 20px;
   }
-  
+
   progressbar {
     trough {
       min-width: 200px;
       min-height: $progress-height;
       background: $surface-1;
       border-radius: $progress-border-radius;
-      
+
       progress {
         background: $color-network;
         border-radius: $progress-border-radius;
@@ -166,35 +225,35 @@ $module-padding: 0.5rem 1rem;
   background-color: rgba(26, 26, 26, 0.85);
   border-radius: 10px;
   padding: 1rem;
-  
+
   calendar {
     padding: 5px;
-    
+
     :selected {
       color: #1e1e2e;
       background-color: #4ade80;
       border-radius: 4px;
     }
-    
+
     .header {
       color: #4ade80;
       font-weight: bold;
     }
-    
+
     .button {
       color: #a855f7;
-      
+
       &:hover {
         background-color: rgba(255, 255, 255, 0.1);
         border-radius: 4px;
       }
     }
-    
+
     .highlight {
       color: #4ade80;
       font-weight: bold;
     }
-    
+
     :indeterminate {
       color: rgba(255, 255, 255, 0.3);
     }

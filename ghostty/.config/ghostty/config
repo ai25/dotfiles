@@ -75,7 +75,6 @@ theme = one-dark
 window-theme = ghostty
 window-decoration = none
 confirm-close-surface = false
-confirm-window-close = false
 
 keybind = alt+tab=toggle_tab_overview
 

@@ -58,7 +58,7 @@ M.general = {
 		["<C-down>"] = { "<C-w>j", "Window Down" },
 
 		-- Formatting using Conform.nvim
-		["<leader>fm"] = { "<cmd>lua require('conform').format()<cr>", "Format" },
+		["<leader>fm"] = { "<cmd>lua require('conform').format({})<cr>", "Format" },
 		["<leader>cu"] = { "<cmd>lua require('conform').update()<cr>", "Update" },
 
 		-- Undo Tree
