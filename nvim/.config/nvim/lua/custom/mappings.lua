@@ -38,9 +38,15 @@ M.general = {
 		},
 		["<leader><space>"] = {
 			function()
-				require("telescope.builtin").buffers()
+				-- Check if the alternate buffer exists and is valid
+				local alt_bufnr = vim.fn.bufnr("#")
+				if alt_bufnr ~= -1 and vim.api.nvim_buf_is_valid(alt_bufnr) then
+					vim.cmd("buffer #")
+				else
+					vim.cmd("bprevious")
+				end
 			end,
-			"[ ] Find existing buffers",
+			"[ ] Toggle between current and previous buffer",
 		},
 		["<leader>gf"] = {
 			function()
@@ -58,8 +64,8 @@ M.general = {
 		["<C-down>"] = { "<C-w>j", "Window Down" },
 
 		-- Formatting using Conform.nvim
-		["<leader>fm"] = { "<cmd>lua require('conform').format({})<cr>", "Format" },
-		["<leader>cu"] = { "<cmd>lua require('conform').update()<cr>", "Update" },
+		-- ["<leader>fm"] = { "<cmd>lua require('conform').format({ bufnr = args.buf })<cr>", "Format" },
+		-- ["<leader>cu"] = { "<cmd>lua require('conform').update()<cr>", "Update" },
 
 		-- Undo Tree
 		["<leader>u"] = { "<cmd>UndotreeToggle<cr>", "Undo Tree" },
@@ -74,13 +80,19 @@ M.general = {
 			end,
 			"Open [G]it [C]ommit",
 		},
-    ["<leader>gn"] = {
-    function()
-        local current_dir = vim.fn.getcwd()
-        require("neogit").open({ cwd = current_dir })
-    end,
-    "Open Neogit in current directory",
-},
+		["<leader>gn"] = {
+			function()
+				local current_dir = vim.fn.getcwd()
+				require("neogit").open({ cwd = current_dir })
+			end,
+			"Open Neogit in current directory",
+		},
+		["gr"] = {
+			function()
+				require("telescope.builtin").lsp_references()
+			end,
+			"[G]oto [R]eferences",
+		},
 
 		['y"'] = {
 			function()
@@ -105,19 +117,18 @@ M.general = {
 			"Copy inside quotes/backticks to clipboard (whole line)",
 		},
 
-     ["]e"] = { 
-        function()
-            vim.diagnostic.goto_next({ severity = vim.diagnostic.severity.ERROR })
-        end,
-        "Go to next error"
-    },
-    ["[e"] = { 
-        function()
-            vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.ERROR })
-        end,
-        "Go to previous error"
-    },
-
+		["]e"] = {
+			function()
+				vim.diagnostic.goto_next({ severity = vim.diagnostic.severity.ERROR })
+			end,
+			"Go to next error",
+		},
+		["[e"] = {
+			function()
+				vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.ERROR })
+			end,
+			"Go to previous error",
+		},
 	},
 	v = {},
 }

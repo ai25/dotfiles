@@ -12,9 +12,9 @@
 (defpoll CPU_LOAD :interval "1s" "scripts/cpu --load")
 (defpoll NETWORK_UP :interval "1s" "scripts/network --up")
 (defpoll NETWORK_DOWN :interval "1s" "scripts/network --down")
-(defpoll BATTERY :interval "10s" "scripts/battery --percentage")
-(defpoll BATTERY_STATUS :interval "10s" "scripts/battery --status")
-(defpoll DATETIME :interval "1s" "date '+%H:%M:%S %a, %b %d, %Y'")
+(defpoll BATTERY :interval "5s" "scripts/battery --percentage")
+(defpoll BATTERY_STATUS :interval "1s" "scripts/battery --status")
+(defpoll DATETIME :interval "1s" "date '+%H:%M:%S %a, %d %b %Y'")
 
 (defvar calendar_visible false)
 (defpoll calendar_day :interval "1m" "date '+%d'")

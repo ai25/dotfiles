@@ -41,7 +41,7 @@ M.treesitter = {
 		enable = true,
 
 		disable = function(lang, buf)
-			local max_filesize = 100 * 1024 -- 100 KB
+			local max_filesize = 1000 * 1024 -- 1000 KB
 			local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(buf))
 			if ok and stats and stats.size > max_filesize then
 				return true
@@ -152,5 +152,40 @@ M.nvterm = {
 	},
 }
 
-return M
+---@type TailwindTools.Option
+M.tailwind_tools = {
+	document_color = {
+		enabled = true, -- can be toggled by commands
+		kind = "inline", -- "inline" | "foreground" | "background"
+		inline_symbol = "󰝤 ", -- only used in inline mode
+		debounce = 200, -- in milliseconds, only applied in insert mode
+	},
+	conceal = {
+		enabled = false, -- can be toggled by commands
+		min_length = nil, -- only conceal classes exceeding the provided length
+		symbol = "󱏿", -- only a single character is allowed
+		highlight = { -- extmark highlight options, see :h 'highlight'
+			fg = "#38BDF8",
+		},
+	},
+	custom_filetypes = {}, -- see the extension section to learn how it works
+	cmp = {
+		highlight = "foreground", -- color preview style, "foreground" | "background"
+	},
+	telescope = {
+		utilities = {
+			callback = function(name, class) end, -- callback used when selecting an utility class in telescope
+		},
+	},
+	-- see the extension section to learn more
+	extension = {
+		queries = {}, -- a list of filetypes having custom `class` queries
+		patterns = { -- a map of filetypes to Lua pattern lists
+			-- example:
+			-- rust = { "class=[\"']([^\"']+)[\"']" },
+			-- javascript = { "clsx%(([^)]+)%)" },
+		},
+	},
+}
 
+return M

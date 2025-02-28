@@ -1,5 +1,19 @@
 local overrides = require("custom.configs.overrides")
 
+---@param bufnr integer
+---@param ... string
+---@return string
+local function first(bufnr, ...)
+	local conform = require("conform")
+	for i = 1, select("#", ...) do
+		local formatter = select(i, ...)
+		if conform.get_formatter_info(formatter, bufnr).available then
+			return formatter
+		end
+	end
+	return select(1, ...)
+end
+
 ---@type NvPluginSpec[]
 local plugins = {
 
@@ -44,10 +58,79 @@ local plugins = {
 
 	{
 		"stevearc/conform.nvim",
-		--  for users those who want auto-save conform + lazyloading!
-		-- event = "BufWritePre"
-		config = function()
-			require("custom.configs.conform")
+		event = { "BufWritePre" },
+		cmd = { "ConformInfo" },
+		keys = {
+			{
+				-- Customize or remove this keymap to your liking
+				"<leader>fm",
+				function()
+					require("conform").format({ async = true })
+				end,
+				mode = "",
+				desc = "Format buffer",
+			},
+		},
+		-- This will provide type hinting with LuaLS
+		---@module "conform"
+		---@type conform.setupOpts
+		opts = {
+			-- Define your formatters
+			formatters_by_ft = {
+				lua = { "stylua" },
+				javascript = function(bufnr)
+					-- First run either prettierd or prettier, then eslint_d or eslint
+					return {
+						first(bufnr, "prettierd", "prettier"),
+						first(bufnr, "eslint_d", "eslint"),
+					}
+				end,
+				typescript = function(bufnr)
+					return {
+						first(bufnr, "prettierd", "prettier"),
+						first(bufnr, "eslint_d", "eslint"),
+					}
+				end,
+				javascriptreact = function(bufnr)
+					return {
+						first(bufnr, "prettierd", "prettier"),
+						first(bufnr, "eslint_d", "eslint"),
+					}
+				end,
+				typescriptreact = function(bufnr)
+					return {
+						first(bufnr, "prettierd", "prettier"),
+						first(bufnr, "eslint_d", "eslint"),
+					}
+				end,
+				css = { "prettier" },
+				html = { "prettier" },
+				sh = { "shfmt" },
+				php = { "phpcbf" },
+				json = { "prettierd" },
+				kotlin = { "ktlint" },
+				-- Use the "*" filetype to run formatters on all filetypes
+				-- ["*"] = { "codespell" },
+				-- Use the "_" filetype to run formatters on filetypes that don't
+				-- have other formatters configured
+				["_"] = { "trim_whitespace" },
+			},
+			-- Set default options
+			default_format_opts = {
+				lsp_format = "fallback",
+			},
+			-- Set up format-on-save
+			format_on_save = { timeout_ms = 500 },
+			-- Customize formatters
+			formatters = {
+				shfmt = {
+					prepend_args = { "-i", "2" },
+				},
+			},
+		},
+		init = function()
+			-- If you want the formatexpr, here is the place to set it
+			vim.o.formatexpr = "v:lua.require'conform'.formatexpr()"
 		end,
 	},
 	-- {
@@ -195,6 +278,7 @@ local plugins = {
 	-- helpful for jsx and html
 	{
 		"windwp/nvim-ts-autotag",
+		lazy = false,
 		config = function()
 			require("nvim-ts-autotag").setup({
 				autotag = { enable = true },
@@ -313,6 +397,34 @@ local plugins = {
 	},
 
 	-- word motions
+	-- This is one word under Vim's definition:
+	--
+	-- CamelCaseACRONYMWords_underscore1234
+	-- w--------------------------------->w
+	-- e--------------------------------->e
+	-- b<---------------------------------b
+	-- With this plugin, this becomes six words:
+	--
+	-- CamelCaseACRONYMWords_underscore1234
+	-- w--->w-->w----->w---->w-------->w->w
+	-- e-->e-->e----->e--->e--------->e-->e
+	-- b<---b<--b<-----b<----b<--------b<-b
+	--
+	-- word definitions
+	-- A word (lowercase) is any of the following:
+	--
+	-- word	Example
+	-- Camel case words	[Camel][Case]
+	-- Acronyms	[HTML]And[CSS]
+	-- Uppercase words	[UPPERCASE] [WORDS]
+	-- Lowercase words	[lowercase] [words]
+	-- Hex color codes	[#0f0f0f]
+	-- Hex literals	[0x00ffFF] [0x0f]
+	-- Octal literals	[0o644] [0o0755]
+	-- Binary literals	[0b01] [0b0011]
+	-- Regular numbers	[1234] [5678]
+	-- Other characters	[~!@#$]
+
 	{
 		"chaoren/vim-wordmotion",
 		event = "BufRead",
@@ -346,50 +458,48 @@ local plugins = {
 		},
 		config = true,
 	},
+
 	{
 		"luckasRanarison/tailwind-tools.nvim",
 		lazy = false,
 		dependencies = { "nvim-treesitter/nvim-treesitter" },
-		---@type TailwindTools.Option
-		opts = {
-			document_color = {
-				enabled = true, -- can be toggled by commands
-				kind = "inline", -- "inline" | "foreground" | "background"
-				inline_symbol = "󰝤 ", -- only used in inline mode
-				debounce = 200, -- in milliseconds, only applied in insert mode
-			},
-			conceal = {
-				enabled = false, -- can be toggled by commands
-				min_length = nil, -- only conceal classes exceeding the provided length
-				symbol = "󱏿", -- only a single character is allowed
-				highlight = { -- extmark highlight options, see :h 'highlight'
-					fg = "#38BDF8",
-				},
-			},
-			custom_filetypes = {}, -- see the extension section to learn how it works
-			cmp = {
-				highlight = "foreground", -- color preview style, "foreground" | "background"
-			},
-			telescope = {
-				utilities = {
-					callback = function(name, class) end, -- callback used when selecting an utility class in telescope
-				},
-			},
-			-- see the extension section to learn more
-			extension = {
-				queries = {}, -- a list of filetypes having custom `class` queries
-				patterns = { -- a map of filetypes to Lua pattern lists
-					-- example:
-					-- rust = { "class=[\"']([^\"']+)[\"']" },
-					-- javascript = { "clsx%(([^)]+)%)" },
-				},
-			},
-		},
+		opts = overrides.tailwind_tools,
 	},
 
 	{
 		"elkowar/yuck.vim",
 		event = "VeryLazy",
+	},
+
+	--   Mappings
+	-- The following default mappings are included:
+	--
+	--     mx              Set mark x
+	--     m,              Set the next available alphabetical (lowercase) mark
+	--     m;              Toggle the next available mark at the current line
+	--     dmx             Delete mark x
+	--     dm-             Delete all marks on the current line
+	--     dm<space>       Delete all marks in the current buffer
+	--     m]              Move to next mark
+	--     m[              Move to previous mark
+	--     m:              Preview mark. This will prompt you for a specific mark to
+	--                     preview; press <cr> to preview the next mark.
+	--
+	--     m[0-9]          Add a bookmark from bookmark group[0-9].
+	--     dm[0-9]         Delete all bookmarks from bookmark group[0-9].
+	--     m}              Move to the next bookmark having the same type as the bookmark under
+	--                     the cursor. Works across buffers.
+	--     m{              Move to the previous bookmark having the same type as the bookmark under
+	--                     the cursor. Works across buffers.
+	--     dm=             Delete the bookmark under the cursor.
+	--
+	{
+		"chentoast/marks.nvim",
+		lazy = false,
+		opts = {},
+		config = function()
+			require("custom.configs.marks")
+		end,
 	},
 }
 
