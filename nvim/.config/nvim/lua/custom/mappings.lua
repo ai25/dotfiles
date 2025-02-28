@@ -129,8 +129,63 @@ M.general = {
 			end,
 			"Go to previous error",
 		},
+
+		-- Yanky
+
+		-- Access yank history through telescope
+		["<leader>fy"] = { "<cmd>Telescope yank_history<cr>", "Find Yank History" },
+
+		-- Enhanced yank that preserves cursor position
+		["y"] = { "<Plug>(YankyYank)", "Yanky Yank" },
+
+		-- Cycle through yank ring with Alt+p/Alt+n (these don't conflict with your mappings)
+		["<M-p>"] = { "<Plug>(YankyPreviousEntry)", "Yanky Previous Entry" },
+		["<M-n>"] = { "<Plug>(YankyNextEntry)", "Yanky Next Entry" },
+
+		-- Special put operations
+		["[y"] = { "<Plug>(YankyPutIndentBeforeLinewise)", "Yanky Put Before (Indent)" },
+		["]y"] = { "<Plug>(YankyPutIndentAfterLinewise)", "Yanky Put After (Indent)" },
+
+		-- These will override your default p/P but provide enhanced functionality
+		["p"] = { "<Plug>(YankyPutAfter)", "Yanky Put After" },
+		["P"] = { "<Plug>(YankyPutBefore)", "Yanky Put Before" },
+
+		-- These work with your existing gp/gP semantics but enhanced
+		["gp"] = { "<Plug>(YankyGPutAfter)", "Yanky GPut After" },
+		["gP"] = { "<Plug>(YankyGPutBefore)", "Yanky GPut Before" },
+
+		-- Additional special put operations (filtering/indentation)
+		[">y"] = { "<Plug>(YankyPutIndentAfterShiftRight)", "Yanky Put After (Shift Right)" },
+		["<y"] = { "<Plug>(YankyPutIndentAfterShiftLeft)", "Yanky Put After (Shift Left)" },
+		["=y"] = { "<Plug>(YankyPutAfterFilter)", "Yanky Put After (Filter)" },
 	},
-	v = {},
+	x = {
+		-- Visual mode mappings
+		["y"] = { "<Plug>(YankyYank)", "Yanky Yank" },
+		["p"] = { "<Plug>(YankyPutAfter)", "Yanky Put After" },
+		["P"] = { "<Plug>(YankyPutBefore)", "Yanky Put Before" },
+		["gp"] = { "<Plug>(YankyGPutAfter)", "Yanky GPut After" },
+		["gP"] = { "<Plug>(YankyGPutBefore)", "Yanky GPut Before" },
+	},
+
+	-- Add text object for yanked text
+	o = {
+		["iy"] = {
+			function()
+				require("yanky.textobj").last_put()
+			end,
+			"Yanky Text Object",
+		},
+	},
+
+	v = {
+		["iy"] = {
+			function()
+				require("yanky.textobj").last_put()
+			end,
+			"Yanky Text Object",
+		},
+	},
 }
 
 M.lspconfig = {
@@ -260,6 +315,14 @@ M.vtt = {
 			"Update timestamp duration",
 		},
 	},
+}
+
+-- Add this section to your M table in custom/mappings.lua
+
+M.yanky = {
+	plugin = true,
+
+	n = {},
 }
 
 return M

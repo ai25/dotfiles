@@ -28,11 +28,34 @@ local options = {
 		{ name = "buffer" },
 		{ name = "nvim_lua" },
 		{ name = "path" },
+		{ name = "yanky" }, -- Add yanky as a completion source
 		-- { name = "tailwindcss" },
 	},
 	formatting = {
 		format = lspkind.cmp_format({
-			before = require("tailwind-tools.cmp").lspkind_format,
+			mode = "symbol_text",
+			menu = {
+				nvim_lsp = "[LSP]",
+				luasnip = "[Snippet]",
+				buffer = "[Buffer]",
+				nvim_lua = "[Lua]",
+				path = "[Path]",
+				yanky = "[Yanky]", -- Add yanky to menu
+				-- tailwindcss = "[Tailwind]",
+			},
+			before = function(entry, vim_item)
+				-- First apply tailwind formatting if available
+				if require("tailwind-tools.cmp").lspkind_format then
+					vim_item = require("tailwind-tools.cmp").lspkind_format(entry, vim_item)
+				end
+
+				-- Then handle yanky entries specially
+				if entry.source.name == "yanky" then
+					vim_item.kind = "󰅌 Yanky" -- Using a clipboard icon
+				end
+
+				return vim_item
+			end,
 		}),
 	},
 }

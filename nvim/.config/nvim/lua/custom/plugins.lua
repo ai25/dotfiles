@@ -501,6 +501,40 @@ local plugins = {
 			require("custom.configs.marks")
 		end,
 	},
+	-- yanky.nvim - Enhanced yank and put functionality for Neovim
+	--
+	-- Features:
+	-- * Yank history with cycling through previous yanks
+	-- * Preserves cursor position when yanking
+	-- * Highlights yanked and put text
+	-- * Enhanced put operations with special behaviors
+	-- * Text objects for yanked content
+	-- * Telescope integration for browsing yank history
+	--
+	-- Key mappings:
+	-- * y           - Yank with preserved cursor position
+	-- * p/P         - Put after/before cursor with yank history support
+	-- * gp/gP       - Put after/before and position cursor after the text
+	-- * <Alt-p>/<Alt-n> - Cycle through previous/next yank in history
+	-- * <leader>fy  - Open yank history in Telescope
+	-- * [y/]y       - Put before/after with proper indentation
+	-- * <y/>y       - Put with decreased/increased indentation
+	-- * =y          - Put with auto-formatting
+	-- * iy          - Text object for the last put text
+	{
+		"gbprod/yanky.nvim",
+		event = "BufRead",
+		dependencies = {
+			"nvim-telescope/telescope.nvim",
+			{
+				"chrisgrieser/cmp_yanky",
+				dependencies = { "hrsh7th/nvim-cmp" },
+			},
+		},
+		config = function()
+			require("custom.configs.yanky")
+		end,
+	},
 }
 
 return plugins
