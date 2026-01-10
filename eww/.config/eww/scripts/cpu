@@ -6,7 +6,7 @@ case $1 in
         ;;
     "--temp")
         # Get CPU temperature
-        sensors coretemp-isa-0000 | grep 'Package id 0:' | awk '{print $4}' | tr -d '+°C'
+        sensors | awk '/Package id 0:/ {print $4; exit} /Tdie:/ {print $2; exit} /Tctl:/ {print $2; exit}' | tr -d '+°C'
         ;;
     "--load")
         # Get CPU load average (1 minute)

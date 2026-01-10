@@ -1,0 +1,5 @@
+# This directory is a Syncthing folder marker.
+# Do not delete.
+
+folderID: pxfpu-zgg5q
+created: 2025-05-27T08:44:30+01:00

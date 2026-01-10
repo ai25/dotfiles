@@ -1,0 +1,255 @@
+;; Variables
+(deflisten workspaces :initial "[]"
+  "bash ~/.config/eww/scripts/get-workspaces")
+
+(deflisten volume :initial "[]" "bash ~/.config/eww/scripts/get-volume")
+
+(deflisten wifi :initial "{\"ssid\": \"Disconnected\", \"strength\": 0}"
+  "bash ~/.config/eww/scripts/wifi")
+(deflisten bluetooth :initial "{\"power\": \"off\", \"connected\": false, \"device_name\": \"\"}"
+  "bash ~/.config/eww/scripts/bluetooth")
+
+(defpoll CPU_USAGE :interval "1s" "scripts/cpu --usage")
+(defpoll CPU_TEMP :interval "1s" "scripts/cpu --temp")
+(defpoll CPU_LOAD :interval "1s" "scripts/cpu --load")
+(defpoll NETWORK_UP :interval "1s" "scripts/network --up")
+(defpoll NETWORK_DOWN :interval "1s" "scripts/network --down")
+(defpoll BATTERY :interval "5s" "scripts/battery --percentage")
+(defpoll BATTERY_STATUS :interval "1s" "scripts/battery --status")
+(defpoll DATETIME :interval "1s" "date '+%H:%M:%S %a, %d %b %Y'")
+
+(defvar calendar_visible false)
+(defpoll calendar_day :interval "1m" "date '+%d'")
+(defpoll calendar_month :interval "1m" "date '+%m'")
+(defpoll calendar_year :interval "1m" "date '+%Y'")
+
+;; Main bar widget
+(defwidget bar []
+  (box :orientation "h"
+       :space-evenly false
+            :class "bar"
+    (workspaces)
+    (special-workspaces)
+    (box :hexpand true)
+    (system-info)
+    ))
+
+(defwidget workspaces []
+  (box :class "workspaces"
+       :orientation "h"
+       :space-evenly false
+       :halign "start"
+       :spacing 8
+    ;; Regular workspaces first
+    (for workspace in workspaces
+      (button
+        :onclick "hyprctl dispatch workspace ${workspace.id}"
+        :class "workspace-btn ${workspace.focused ? 'current' : ''}"
+        :visible {!matches(workspace.name, '^S')}
+        "${workspace.name}"))
+  ))
+
+(defwidget special-workspaces []
+    (box :class "special-workspaces"
+         :orientation "h"
+         :space-evenly false
+         :spacing 4
+      (for workspace in workspaces
+        (button
+          :onclick "hyprctl dispatch workspace ${workspace.id}"
+          :class "workspace-btn special ${workspace.focused ? 'current' : ''}"
+          :visible {matches(workspace.name, '^S')}
+          "${workspace.name}"))))
+
+(defwidget system-info []
+  (box :class "system-info"
+       :orientation "h"
+       :space-evenly false
+       :halign "end"
+       :spacing 16
+    (cpu-module)
+    (memory-module)
+    (disk-module)
+    (network-module)
+    (wifi-module)
+    (volume-module)
+    (battery-module)
+    (time-module)))
+
+(defwidget cpu-module []
+  (box :class "module cpu"
+       :orientation "h"
+       :space-evenly false
+       :spacing 4
+    (label :text "󰻠 ")
+    (label :text "${CPU_USAGE}%")
+    (label :text "${CPU_TEMP}°C")))
+
+(defwidget memory-module []
+  (box :class "module memory"
+       :orientation "h"
+       :space-evenly false
+       :spacing 4
+    (label :text "󰍛 ")
+    (label :text "${round(EWW_RAM.used_mem_perc, 0)}%")))
+
+(defwidget disk-module []
+  (box :class "module disk"
+       :orientation "h"
+       :space-evenly false
+       :spacing 4
+    (label :text "󰋊 ")
+(label :text "/" :class "label")
+        (progress
+          :valign "center"
+                 :flipped false
+                 :value "${round((1 - (EWW_DISK['/'].free / EWW_DISK['/'].total)) * 100, 0)}"
+                 :orientation "h")
+    (label :class "value" :text "${round((1 - (EWW_DISK['/'].free / EWW_DISK['/'].total)) * 100, 0)}%")
+    (box :class "divider")
+(label :text "/home" :class "label")
+        (progress
+          :valign "center"
+                 :flipped false
+                 :value "${round((1 - (EWW_DISK['/home'].free / EWW_DISK['/home'].total)) * 100, 0)}"
+                 :orientation "h")
+     (label :class "value" :text "${round((1 - (EWW_DISK['/home'].free / EWW_DISK['/home'].total)) * 100, 0)}%")))
+
+(defwidget network-module []
+  (box :class "module network"
+       :orientation "h"
+       :space-evenly false
+       :spacing 4
+    (label :text "󰀂 ")
+    (label :text "󰕒 ${NETWORK_UP} 󰇚 ${NETWORK_DOWN}")))
+
+(defwidget wifi-module []
+  (box :class "module wifi"
+       :orientation "h"
+       :space-evenly false
+       :spacing 4
+    (label :text {wifi.strength >= 80 ? "󰤨 " :
+                  wifi.strength >= 60 ? "󰤥 " :
+                  wifi.strength >= 40 ? "󰤢 " :
+                  wifi.strength >= 20 ? "󰤟 " : "󰤯 "})
+    (box :orientation "h"
+         :space-evenly false
+         :spacing 8
+      (label :text {wifi.ssid})
+      (label :class "ip" :text {wifi.ip != "" ? "(" + wifi.ip + ")" : ""}))))
+
+
+(defwidget volume-module []
+  (box :class "module volume"
+       :orientation "h"
+       :space-evenly false
+       :spacing 4
+    (label :text {volume[0] == "muted" ? "󰝟 " :
+                  volume[1] == "0" ? "󰕿 " :
+                  volume[1] < "30" ? "󰖀 " :
+                  volume[1] < "70" ? "󰕾 " : "󰕾 "})
+    (label :text {volume[0] == "muted" ? "muted" : "${volume[1]}%"})))
+
+
+(defwidget battery-module []
+  (box :class "module battery ${BATTERY <= 30 && BATTERY_STATUS != 'Charging' ? 'danger':''}"
+       :orientation "h"
+       :space-evenly false
+       :spacing 4
+    (label :text {BATTERY_STATUS == "Charging" ? "󰂄 " :
+                  BATTERY_STATUS == "Full" ? "󰁹 " :
+                  BATTERY_STATUS == "Not charging" ? (
+                    BATTERY < 20 ? "󰁺 " :
+                    BATTERY < 40 ? "󰁼 " :
+                    BATTERY < 60 ? "󰁾 " :
+                    BATTERY < 80 ? "󰂀 " : "󰚥 "
+                  ) :
+                  BATTERY_STATUS == "Discharging" ? (
+                    BATTERY < 20 ? "󰁻 " :
+                    BATTERY < 40 ? "󰁽 " :
+                    BATTERY < 60 ? "󰁿 " :
+                    BATTERY < 80 ? "󰂁 " : "󰁹 "
+                  ) : "󰂃"})  ; Default/unknown status
+    (label :text "${BATTERY}%")))
+
+(defwidget time-module []
+  (eventbox :onclick "scripts/toggle-calendar"
+    (box :class "module time"
+         :orientation "h"
+         :space-evenly false
+         :spacing 4
+      (label :text "󰥔 ")
+      (label :text "${DATETIME}"))))
+
+;; Windows
+(defwindow bar
+  :monitor 0
+  :geometry (geometry :x "0%"
+                     :y "0px"
+                     :width "100%"
+                     :height "24px"
+                     :anchor "top center")
+  :stacking "bg"
+  :exclusive true
+  :focusable false
+  :reserve (struts :distance "40px" :side "top")
+  :windowtype "dock"
+  (bar))
+
+(defvar barIcon "󰃠")
+(defvar barPercent 0)
+(defvar barCount 0)
+
+;; Widgets
+(defwidget progressBar [icon percent]
+    (box
+        :class "progressBar"
+        :orientation "h"
+        :halign "center"
+        :valign "center"
+        :space-evenly false
+        (label :text icon :yalign 0.5 :valign "center")
+        (progress :valign "center"
+                 :flipped false
+                 :value percent
+                 :orientation "h")))
+
+(defwindow overlay
+    :monitor 0
+    :stacking "overlay"
+    :focusable false
+    :exclusive false
+    :geometry (geometry :width "170px"
+                       :height "40px"
+                       :anchor "center")
+    (progressBar :icon barIcon :percent barPercent))
+
+(defwidget calendar-module []
+  (box :class "calendar-module"
+       :orientation "v"
+    (calendar :class "calendar"
+             :day calendar_day
+             :month calendar_month
+             :year calendar_year)))
+
+(defwindow calendar
+    :monitor 0
+    :geometry (geometry :x "1%"
+                       :y "1%"
+                       :width "270px"
+                       :height "200px"
+                       :anchor "top right")
+    :stacking "overlay"
+    :focusable false
+    :exclusive false
+    (calendar-module))
+
+(defwindow calendar-closer
+  :monitor 0
+  :geometry (geometry :width "100%"
+                     :height "100%"
+                     :anchor "center")
+  :stacking "fg"
+  :focusable false
+  :exclusive false
+  (eventbox :onclick "eww update calendar_visible=false" ))

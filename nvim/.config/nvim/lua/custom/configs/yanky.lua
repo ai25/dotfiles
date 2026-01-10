@@ -1,5 +1,4 @@
 local function setup()
-	vim.notify("hello")
 	require("yanky").setup({
 		ring = {
 			history_length = 100,

@@ -31,7 +31,7 @@ end
 -- if you just want default config for the servers then put them in a table
 -- set up for web development (html, css, js, ts, react, vue, svelte, php, wordpress)
 local servers = {
-	"html",
+	-- "html",
 	"cssls",
 	"ts_ls",
 	"clangd",
@@ -51,6 +51,12 @@ local servers = {
 	"angularls",
 	"astro",
 	"rust_analyzer",
+
+	"gopls",
+
+	"basedpyright",
+
+	"omnisharp",
 }
 
 for _, lsp in ipairs(servers) do
@@ -59,19 +65,6 @@ for _, lsp in ipairs(servers) do
 		capabilities = capabilities,
 	})
 end
-
-lspconfig.pyright.setup({
-	settings = {
-		pylsp = {
-			plugins = {
-				pycodestyle = {
-					ignore = { "W391" },
-					maxLineLength = 100,
-				},
-			},
-		},
-	},
-})
 
 lspconfig.ts_ls.setup({
 	on_attach = function(client, bufnr)
@@ -94,7 +87,34 @@ lspconfig.stylelint_lsp.setup({
 	},
 })
 
+lspconfig.omnisharp.setup({
+
+	on_attach = on_attach,
+
+	capabilities = capabilities,
+
+	cmd = { vim.fn.stdpath("data") .. "/mason/bin/OmniSharp" },
+
+	enable_ms_build_load_projects_on_demand = false,
+
+	enable_editorconfig_support = true,
+
+	enable_roslyn_analysers = true,
+
+	enable_import_completion = true,
+
+	organize_imports_on_format = true,
+
+	enable_decompilation_support = true,
+
+	analyze_open_documents_only = false,
+
+	filetypes = { "cs", "vb", "csproj", "sln", "slnx", "props", "csx", "targets" },
+})
+
 lspconfig.eslint.setup({
+	on_attach = on_attach,
+	capabilities = capabilities,
 	filetypes = {
 		"javascript",
 		"javascriptreact",
@@ -132,10 +152,17 @@ lspconfig.cssls.setup({
 		},
 	},
 })
+lspconfig.basedpyright.setup({
+	on_attach = on_attach,
+	capabilities = capabilities,
+	settings = {
+		typeCheckingMode = "off",
+	},
+})
 lspconfig.jsonls.setup({
 	on_attach = on_attach,
 	capabilities = capabilities,
-	cmd = { "vscode-json-languageserver", "--stdio" },
+	cmd = { "vscode-json-language-server", "--stdio" },
 })
 
 -- lspconfig.phpactor.setup {

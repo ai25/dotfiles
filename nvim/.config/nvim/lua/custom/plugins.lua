@@ -16,12 +16,31 @@ end
 
 ---@type NvPluginSpec[]
 local plugins = {
-
-	-- Override plugin definition options
 	{
-		"christoomey/vim-tmux-navigator",
+		"nvim-lua/plenary.nvim",
 		lazy = false,
 	},
+	-- {
+	-- 	"nvim-telescope/telescope.nvim",
+	-- 	dependencies = { "nvim-treesitter/nvim-treesitter" },
+	-- 	cmd = "Telescope",
+	-- 	init = function()
+	-- 		require("core.utils").load_mappings("telescope")
+	-- 	end,
+	-- 	opts = function()
+	-- 		return require("plugins.configs.telescope")
+	-- 	end,
+	-- 	config = function(_, opts)
+	-- 		dofile(vim.g.base46_cache .. "telescope")
+	-- 		local telescope = require("telescope")
+	-- 		telescope.setup(opts)
+	--
+	-- 		-- load extensions
+	-- 		for _, ext in ipairs(opts.extensions_list) do
+	-- 			telescope.load_extension(ext)
+	-- 		end
+	-- 	end,
+	-- },
 
 	{
 		"neovim/nvim-lspconfig",
@@ -47,14 +66,13 @@ local plugins = {
 		opts = overrides.nvimtree,
 	},
 
-	-- Install a plugin
-	{
-		"max397574/better-escape.nvim",
-		event = "InsertEnter",
-		config = function()
-			require("better_escape").setup()
-		end,
-	},
+	-- {
+	-- 	"max397574/better-escape.nvim",
+	-- 	event = "InsertEnter",
+	-- 	config = function()
+	-- 		require("better_escape").setup()
+	-- 	end,
+	-- },
 
 	{
 		"stevearc/conform.nvim",
@@ -79,28 +97,23 @@ local plugins = {
 			formatters_by_ft = {
 				lua = { "stylua" },
 				javascript = function(bufnr)
-					-- First run either prettierd or prettier, then eslint_d or eslint
 					return {
 						first(bufnr, "prettierd", "prettier"),
-						first(bufnr, "eslint_d", "eslint"),
 					}
 				end,
 				typescript = function(bufnr)
 					return {
 						first(bufnr, "prettierd", "prettier"),
-						first(bufnr, "eslint_d", "eslint"),
 					}
 				end,
 				javascriptreact = function(bufnr)
 					return {
 						first(bufnr, "prettierd", "prettier"),
-						first(bufnr, "eslint_d", "eslint"),
 					}
 				end,
 				typescriptreact = function(bufnr)
 					return {
 						first(bufnr, "prettierd", "prettier"),
-						first(bufnr, "eslint_d", "eslint"),
 					}
 				end,
 				css = { "prettier" },
@@ -144,11 +157,11 @@ local plugins = {
 	-- 	-- lazy = false
 	-- 	opts = overrides.copilot,
 	-- },
-	{
-		"onsails/lspkind.nvim",
-		lazy = false,
-		priority = 1000, -- Add high priority to ensure it loads early
-	},
+	-- {
+	-- 	"onsails/lspkind.nvim",
+	-- 	lazy = false,
+	-- 	priority = 1000, -- Add high priority to ensure it loads early
+	-- },
 	{
 		"hrsh7th/nvim-cmp",
 		dependencies = {
@@ -175,15 +188,15 @@ local plugins = {
 			t.load_extension("projects")
 		end,
 	},
-	{
-		"numToStr/Comment.nvim",
-		dependencies = "JoosepAlviste/nvim-ts-context-commentstring",
-		config = function()
-			require("Comment").setup({
-				pre_hook = require("ts_context_commentstring.integrations.comment_nvim").create_pre_hook(),
-			})
-		end,
-	},
+	-- {
+	-- 	"numToStr/Comment.nvim",
+	-- 	dependencies = "JoosepAlviste/nvim-ts-context-commentstring",
+	-- 	config = function()
+	-- 		require("Comment").setup({
+	-- 			pre_hook = require("ts_context_commentstring.integrations.comment_nvim").create_pre_hook(),
+	-- 		})
+	-- 	end,
+	-- },
 
 	{
 		"karb94/neoscroll.nvim",
@@ -215,42 +228,6 @@ local plugins = {
 		lazy = false,
 		config = function()
 			-- require("custom.configs.startify")
-		end,
-	},
-	{
-		"mfussenegger/nvim-lint",
-		lazy = false,
-		config = function()
-			require("lint").linters_by_ft = {
-				javascript = { "eslint_d" },
-				typescript = { "eslint_d" },
-				typescriptreact = { "eslint_d" },
-				javascriptreact = { "eslint_d" },
-				lua = { "luacheck" },
-				-- css
-				css = { "stylelint" },
-				scss = { "stylelint" },
-				sass = { "stylelint" },
-				less = { "stylelint" },
-			}
-			vim.api.nvim_set_keymap(
-				"v",
-				"<C-c>",
-				'<Esc>:lua require("lint").try_lint()<CR>',
-				{ noremap = true, silent = true }
-			)
-
-			vim.api.nvim_set_keymap(
-				"i",
-				"<C-c>",
-				'<Esc>:lua require("lint").try_lint()<CR>',
-				{ noremap = true, silent = true }
-			)
-			vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost" }, {
-				callback = function()
-					require("lint").try_lint()
-				end,
-			})
 		end,
 	},
 
@@ -317,7 +294,7 @@ local plugins = {
 	-- press q to skip current and get next occurrence
 	-- press Q to remove current cursor/selection
 	-- start insert mode with i,a,I,A
-	--
+
 	{
 		"mg979/vim-visual-multi",
 		lazy = false,
@@ -355,14 +332,14 @@ local plugins = {
 		event = "VeryLazy",
 	},
 
-	-- Git Signs
-	{
-		"lewis6991/gitsigns.nvim",
-		event = "BufRead",
-		config = function()
-			require("gitsigns").setup()
-		end,
-	},
+	-- -- Git Signs
+	-- {
+	-- 	"lewis6991/gitsigns.nvim",
+	-- 	event = "BufRead",
+	-- 	config = function()
+	-- 		require("gitsigns").setup()
+	-- 	end,
+	-- },
 
 	-- Sneak
 	-- Sneak is invoked with s followed by exactly two characters:
@@ -456,7 +433,9 @@ local plugins = {
 
 			"nvim-telescope/telescope.nvim", -- optional
 		},
-		config = true,
+		config = function()
+			require("custom.configs.neogit")
+		end,
 	},
 
 	{
@@ -493,14 +472,14 @@ local plugins = {
 	--                     the cursor. Works across buffers.
 	--     dm=             Delete the bookmark under the cursor.
 	--
-	{
-		"chentoast/marks.nvim",
-		lazy = false,
-		opts = {},
-		config = function()
-			require("custom.configs.marks")
-		end,
-	},
+	-- {
+	-- 	"chentoast/marks.nvim",
+	-- 	lazy = false,
+	-- 	opts = {},
+	-- 	config = function()
+	-- 		require("custom.configs.marks")
+	-- 	end,
+	-- },
 	-- yanky.nvim - Enhanced yank and put functionality for Neovim
 	--
 	-- Features:
@@ -534,6 +513,191 @@ local plugins = {
 		config = function()
 			require("custom.configs.yanky")
 		end,
+	},
+
+	{
+		"ravitemer/mcphub.nvim",
+		dependencies = {
+			"nvim-lua/plenary.nvim",
+		},
+		event = "VeryLazy",
+		config = function()
+			require("mcphub").setup({})
+		end,
+	},
+	{
+		"yetone/avante.nvim",
+		-- if you want to build from source then do `make BUILD_FROM_SOURCE=true`
+		build = "make", -- ⚠️ must add this line! ! !
+		-- build = "powershell -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource false" -- for windows
+		event = "VeryLazy",
+		version = false, -- Never set this value to "*"! Never!
+		dependencies = {
+			"nvim-treesitter/nvim-treesitter",
+			"nvim-lua/plenary.nvim",
+			"MunifTanjim/nui.nvim",
+			--- The below dependencies are optional,
+			"nvim-telescope/telescope.nvim", -- for file_selector provider telescope
+			"hrsh7th/nvim-cmp", -- autocompletion for avante commands and mentions
+			"folke/snacks.nvim", -- for input provider snacks
+			"nvim-tree/nvim-web-devicons", -- or echasnovski/mini.icons
+			{
+				-- support for image pasting
+				"HakonHarnes/img-clip.nvim",
+				event = "VeryLazy",
+				opts = {
+					-- recommended settings
+					default = {
+						embed_image_as_base64 = false,
+						prompt_for_file_name = false,
+						drag_and_drop = {
+							insert_mode = true,
+						},
+						-- required for Windows users
+						use_absolute_path = true,
+					},
+				},
+			},
+			{
+				-- Make sure to set this up properly if you have lazy=true
+				"MeanderingProgrammer/render-markdown.nvim",
+				opts = {
+					file_types = { "markdown", "Avante" },
+				},
+				ft = { "markdown", "Avante" },
+			},
+		},
+		config = function()
+			require("custom.configs.avante")
+		end,
+	},
+
+	{
+		"echasnovski/mini.align",
+		event = "BufRead",
+		version = "*",
+		config = function()
+			require("mini.align").setup()
+		end,
+	},
+	{
+		"echasnovski/mini.comment",
+		event = "BufRead",
+		version = "*",
+		config = function()
+			require("mini.comment").setup()
+		end,
+	},
+	{
+		"echasnovski/mini.cursorword",
+		event = "BufRead",
+		version = "*",
+		config = function()
+			require("mini.cursorword").setup()
+		end,
+	},
+	{
+		"echasnovski/mini.hipatterns",
+		event = "BufRead",
+		version = "*",
+		config = function()
+			local hipatterns = require("mini.hipatterns")
+			hipatterns.setup({
+				highlighters = {
+					-- Highlight standalone 'FIXME', 'HACK', 'TODO', 'NOTE'
+					fixme = { pattern = "%f[%w]()FIXME()%f[%W]", group = "MiniHipatternsFixme" },
+					hack = { pattern = "%f[%w]()HACK()%f[%W]", group = "MiniHipatternsHack" },
+					todo = { pattern = "%f[%w]()TODO()%f[%W]", group = "MiniHipatternsTodo" },
+					note = { pattern = "%f[%w]()NOTE()%f[%W]", group = "MiniHipatternsNote" },
+
+					-- Highlight hex color strings (`#rrggbb`) using that color
+					hex_color = hipatterns.gen_highlighter.hex_color(),
+				},
+			})
+		end,
+	},
+	{
+		"echasnovski/mini.indentscope",
+		event = "BufRead",
+		version = "*",
+		config = function()
+			require("mini.indentscope").setup()
+		end,
+	},
+	{
+		"olimorris/codecompanion.nvim",
+		opts = {},
+		event = "VeryLazy",
+		dependencies = {
+			"nvim-lua/plenary.nvim",
+			"nvim-treesitter/nvim-treesitter",
+		},
+		config = function()
+			require("codecompanion").setup({
+				strategies = {
+					chat = {
+						adapter = "ollama",
+						-- model = "gemma3n:e4b",
+						model = "qwen3:0.6b",
+					},
+					inline = {
+						adapter = "ollama",
+						-- model = "gemma3n:e4b",
+						model = "qwen3:0.6b",
+					},
+				},
+				adapters = {
+					-- ollama = function()
+					-- 	return require("codecompanion.adapters").extend("ollama", {
+					-- 		env = {
+					-- 			url = "http://localhost:8080",
+					-- 		},
+					-- 	})
+					-- end,
+				},
+			})
+		end,
+	},
+	-- {
+	-- 	"xiyaowong/transparent.nvim",
+	-- 	lazy = false,
+	-- 	config = function()
+	-- 		require("transparent").setup({
+	-- 			groups = { -- Default groups to clear
+	-- 				"Normal",
+	-- 				"NormalNC",
+	-- 				"Comment",
+	-- 				"Constant",
+	-- 				"Special",
+	-- 				"Identifier",
+	-- 				"Statement",
+	-- 				"PreProc",
+	-- 				"Type",
+	-- 				"Underlined",
+	-- 				"Todo",
+	-- 				"String",
+	-- 				"Function",
+	-- 				"Conditional",
+	-- 				"Repeat",
+	-- 				"Operator",
+	-- 				"Structure",
+	-- 				"LineNr",
+	-- 				"NonText",
+	-- 				"SignColumn",
+	-- 				"CursorLine",
+	-- 				"CursorLineNr",
+	-- 				"StatusLine",
+	-- 				"StatusLineNC",
+	-- 				"EndOfBuffer",
+	-- 			},
+	-- 			extra_groups = { "NvimTreeNormal", "NvimTreeNormalNC" }, -- Include NvimTree highlight groups
+	-- 			exclude_groups = {}, -- Groups you don't want to clear
+	-- 		})
+	-- 	end,
+	-- },
+	{
+		"nvim-telescope/telescope-fzf-native.nvim",
+		build = "cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5 && cmake --build build --config Release",
 	},
 }
 

@@ -1,60 +1,73 @@
 #!/bin/bash
 
-barCount=$(eww get barCount)
 entity="$1"
 verb="$2"
 barIcon=""
 barPercent=""
 
+# Timeout file to track when overlay should close
+TIMEOUT_FILE="/tmp/eww_overlay_timeout"
+
 function openWindow() {
-    eww update barIcon="$barIcon" barPercent="$barPercent" && eww open overlay
-    barCount=$((barCount + 1))
-    eww update barCount="$barCount"
+  # Set the timeout to 1 second from now
+  echo $(($(date +%s) + 1)) >"$TIMEOUT_FILE"
 
-    sleep 1
+  # Update eww variables and open overlay
+  eww update barIcon="$barIcon" barPercent="$barPercent"
+  eww open overlay 2>/dev/null || true
 
-    barCount=$(eww get barCount)
-    barCount=$((barCount - 1))
-    eww update barCount="$barCount"
-    if [ $barCount -lt 1 ]; then
-        eww close overlay
+  # Fork a background process to handle closing
+  (
+    sleep 1.1 # Slightly longer than 1 second to ensure we check after timeout
+
+    # Check if this is still the latest timeout
+    if [ -f "$TIMEOUT_FILE" ]; then
+      current_time=$(date +%s)
+      timeout_time=$(cat "$TIMEOUT_FILE" 2>/dev/null || echo 0)
+
+      if [ $current_time -ge $timeout_time ]; then
+        eww close overlay 2>/dev/null || true
+        rm -f "$TIMEOUT_FILE"
+      fi
     fi
+  ) &
 }
 
+# Rest of your code remains the same
 if [ "$entity" == "volume" ]; then
-    barPercent=$(pactl get-sink-volume @DEFAULT_SINK@ | head -n 1 | awk '{print substr($5, 1, length($5)-1)}')
-    if [ "$verb" == "up" ]; then
-        if [ "$barPercent" -lt 200 ]; then
-            pactl set-sink-volume @DEFAULT_SINK@ +5%
-            barIcon="󰝝"
-        else
-            exit 1
-        fi
-    elif [ "$verb" == "down" ]; then
-        pactl set-sink-volume @DEFAULT_SINK@ -5%
-        barIcon="󰝞"
-    elif [ "$verb" == "mute" ]; then
-        pactl set-sink-mute @DEFAULT_SINK@ toggle
-        barIcon="󰝟"
-        if [ "$(pactl get-sink-mute @DEFAULT_SINK@ | cut --delimiter=" " -f 2)" == "no" ]; then
-            barIcon="󰕾"
-        fi
+  barPercent=$(pactl get-sink-volume @DEFAULT_SINK@ | head -n 1 | awk '{print substr($5, 1, length($5)-1)}')
+  if [ "$verb" == "up" ]; then
+    if [ "$barPercent" -lt 200 ]; then
+      pactl set-sink-volume @DEFAULT_SINK@ +5%
+      barIcon="󰕾"
     else
-        exit 1
+      exit 1
     fi
-    barPercent=$(pactl get-sink-volume @DEFAULT_SINK@ | head -n 1 | awk '{print substr($5, 1, length($5)-1)}')
-elif [ "$entity" == "brightness" ]; then
-    if [ "$verb" == "up" ]; then
-        brightnessctl set 5%+
-    elif [ "$verb" == "down" ]; then
-        brightnessctl set 5%-
-    else
-        exit 1
+  elif [ "$verb" == "down" ]; then
+    pactl set-sink-volume @DEFAULT_SINK@ -5%
+    barIcon="󰖀"
+  elif [ "$verb" == "mute" ]; then
+    pactl set-sink-mute @DEFAULT_SINK@ toggle
+    barIcon="󰝟"
+    if [ "$(pactl get-sink-mute @DEFAULT_SINK@ | cut --delimiter=" " -f 2)" == "no" ]; then
+      barIcon="󰕾"
     fi
-    barIcon="󰳲"
-    barPercent=$(brightnessctl | sed -En 's/.*\(([0-9]+)%\).*/\1/p')
-else
+  else
     exit 1
+  fi
+  barPercent=$(pactl get-sink-volume @DEFAULT_SINK@ | head -n 1 | awk '{print substr($5, 1, length($5)-1)}')
+elif [ "$entity" == "brightness" ]; then
+  if [ "$verb" == "up" ]; then
+    brightnessctl set 5%+
+  elif [ "$verb" == "down" ]; then
+    brightnessctl set 5%-
+  else
+    exit 1
+  fi
+  barIcon="󰳲"
+  barPercent=$(brightnessctl | sed -En 's/.*\(([0-9]+)%\).*/\1/p')
+else
+  exit 1
 fi
 
 openWindow

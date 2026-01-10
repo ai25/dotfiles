@@ -1,0 +1,15 @@
+#!/bin/bash
+case $1 in
+    "--usage")
+        # Get CPU usage percentage using psutil
+        sar -u 1 1 | grep "Average" | awk '{print $3+$4+$5}'
+        ;;
+    "--temp")
+        # Get CPU temperature
+        sensors coretemp-isa-0000 | grep 'Package id 0:' | awk '{print $4}' | tr -d '+°C'
+        ;;
+    "--load")
+        # Get CPU load average (1 minute)
+        uptime | awk '{print $(NF-2)}' | sed 's/,//'
+        ;;
+esac

@@ -1,30 +1,67 @@
-// Base Colors
-$base-color: #1e1e2e;
-$surface-0: #313244;
-$surface-1: #45475a;
-$surface-2: #585b70;
-
-// Component Colors - Pastel Versions
-$color-cpu: #98e8ac;
-$color-memory: #c4a6ff;
-$color-disk: #ffb3c0;
-$color-network: #c4e3ff;
-$color-wifi: #7ad7ff;
-$color-volume: #e2a2ff;
-$color-battery: #a8ff80;
-$color-time: #7aecd5;
-$color-current-workspace: #98e8ac;
+// Warning and danger colours - keep these as constants
+$color-warning: #f4a461;
 $color-danger: #f84444;
 
+@import "./colors.scss";
 
 // Common Values
-$bg-opacity: 0.1;
+$bg-opacity: 0.95;
+$bg-opacity-strong: 0.45;
 $transition-speed: 200ms;
 $border-radius-sm: 4px;
 $border-radius-lg: 10px;
 $font-size-sm: 12px;
 $font-size-base: 14px;
 $module-padding: 0.5rem 1rem;
+
+@function ensure-visibility($color) {
+  $red: red($color);
+  $green: green($color);
+  $blue: blue($color);
+  // Calculate relative luminance
+  $luminance: (0.299 * $red + 0.587 * $green + 0.114 * $blue) / 255;
+
+  $color: saturate($color, 50%);
+
+  @if $luminance > 0.8 {
+    @return  lighten($color, 10%);
+  } @else if $luminance > 0.6 {
+    @return lighten($color, 10%);
+  } @else if $luminance > 0.4 {
+    @return lighten($color, 45%);
+  } @else if $luminance > 0.2 {
+    @return lighten($color, 60%);
+  } @else {
+    @return lighten($color, 70%);
+  }
+}
+
+@function ensure-background($color) {
+  $red: red($color);
+  $green: green($color);
+  $blue: blue($color);
+  $luminance: (0.299 * $red + 0.587 * $green + 0.114 * $blue) / 255;
+
+  @if $luminance > 0.7 {
+    @return darken($color, 50%);
+  } @else if $luminance > 0.5 {
+    @return darken($color, 35%);
+  } @else if $luminance > 0.3 {
+    @return darken($color, 15%);
+  } @else if $luminance > 0.15 {
+    @return darken($color, 5%);
+  } @else {
+    @return darken($color, 8%);
+  }
+}
+
+@function tint-with-warning($color) {
+  @return mix($color-warning, $color, 65%);
+}
+
+@function tint-with-danger($color) {
+  @return mix($color-danger, $color, 70%);
+}
 
 // Base Styles
 * {
@@ -36,20 +73,20 @@ $module-padding: 0.5rem 1rem;
 
 // Layout Components
 .bar {
-  background-color: rgba(26, 26, 26, 0.85);
-  padding: 6px;
+  background-color: rgba($base-color, 0);
+  padding: 3px;
   margin: 0;
-
 }
 
 .module {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: rgba(ensure-background($surface-1), 0.9);
   border-radius: $border-radius-lg;
   padding: $module-padding;
   margin: 0;
   box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
   transition: all $transition-speed ease;
-
+  color: $base-color;
+  border: 1px solid rgba($base-color,0.3);
 }
 
 .small {
@@ -64,41 +101,23 @@ $module-padding: 0.5rem 1rem;
   button {
     min-width: 1.2rem;
     min-height: 1.2rem;
-    border-radius: $border-radius-sm;
-    margin: 0 0.15rem;
-    color: rgba(255, 255, 255, 0.6);
+    border-radius: $border-radius-lg;
+    margin: 3px 0;
+    padding: 0 5px;
+    color: ensure-visibility($foreground);
+    background-color: rgba($background,0.5);
     font-size: $font-size-sm;
-    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+    // box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
     transition: all $transition-speed ease;
   }
 
   .current {
-    background-color: rgba($color-current-workspace, $bg-opacity);
-    color: $color-current-workspace;
+    background-color: rgba(ensure-background($color-current-workspace), $bg-opacity-strong);
+    color: ensure-visibility($color-current-workspace);
+    border: 1px solid rgba($foreground,0.2);
   }
 }
 
-.special-workspaces {
-  padding: 0 0.3rem;
-  margin-left: 0.6rem;
-
-  button {
-    min-width: 1.2rem;
-    min-height: 1.2rem;
-    border-radius: 4px;
-    margin: 0 0.15rem;
-    color: rgba(255, 255, 255, 0.6);
-    min-width: 1rem;
-    min-height: 1rem;
-    font-size: 6px;
-
-
-    &.current {
-      background-color: #f4a461;
-      color: #1e1e2e;
-    }
-  }
-}
 
 // System Modules
 .system-info {
@@ -106,43 +125,105 @@ $module-padding: 0.5rem 1rem;
 }
 
 .cpu {
-  background-color: rgba($color-cpu, $bg-opacity);
-  color: $color-cpu;
-}
+  background-color: rgba(ensure-background($color-cpu), $bg-opacity-strong);
+  color: ensure-visibility($color-cpu);
 
-.memory {
-  background-color: rgba($color-memory, $bg-opacity);
-  color: $color-memory;
-}
-
-.disk {
-  background-color: rgba($color-disk, $bg-opacity);
-  color: $color-disk;
-  .label {
-    color: rgba($color-disk, 0.8);
-    font-size: 10px;
-    font-weight:600;
-    padding: 0px 8px;
-    border: 1px solid rgba($color-disk, 0.2);
-    background-color: rgba($color-disk, 0.1);
-    border-radius: 9px;
-  }
-  .value {
-  }
   .divider {
-    border-right: 1px solid rgba($color-disk, 0.15);
-    margin:0px 4px;
+    border-right: 1px solid rgba($color-cpu, 0.3);
+    margin: 0px 4px;
   }
+
+  &.warning {
+    $warning-tinted: tint-with-warning($color-cpu);
+
+    .divider {
+      border-right: 1px solid rgba($warning-tinted, 0.3);
+    }
+    background-color: rgba(ensure-background($warning-tinted), $bg-opacity-strong);
+    color: ensure-visibility($warning-tinted);
+
+    progressbar {
+      trough {
+        background-color: rgba($warning-tinted, 0.2);
+        progress {
+          background-color: ensure-visibility($warning-tinted);
+        }
+      }
+    }
+
+    &.danger {
+      $danger-tinted: tint-with-danger($color-cpu);
+
+      .divider {
+        border-right: 1px solid rgba($danger-tinted, 0.3);
+      }
+      background-color: rgba(ensure-background($danger-tinted), $bg-opacity-strong);
+      color: ensure-visibility($danger-tinted);
+
+      progressbar {
+        trough {
+          background-color: rgba($danger-tinted, 0.2);
+          progress {
+            background-color: ensure-visibility($danger-tinted);
+          }
+        }
+      }
+    }
+  }
+
   progressbar {
     margin-left: 3px;
+
     trough {
       min-width: 60px;
       min-height: 10px;
-      background-color: rgba($color-disk, 0.15);
+      background-color: rgba(ensure-background($color-cpu), 0.2);
       border-radius: 4px;
 
       progress {
-        background-color: $color-disk;
+        background-color: ensure-visibility($color-cpu);
+        border-radius: 4px;
+        min-height: 10px;
+      }
+    }
+  }
+}
+
+.memory {
+  background-color: rgba(ensure-background($color-memory), $bg-opacity-strong);
+  color: ensure-visibility($color-memory);
+}
+
+.disk {
+  background-color: rgba(ensure-background($color-disk), $bg-opacity-strong);
+  color: ensure-visibility($color-disk);
+
+  .label {
+    color: ensure-visibility($color-disk);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 0px 8px;
+    border: 1px solid rgba($color-disk, 0.3);
+    background-color: rgba(ensure-background($color-disk), 0.1);
+    border-radius: 9px;
+  }
+
+  .divider {
+    border-right: 1px solid rgba($color-disk, 0.3);
+    margin: 0px 4px;
+  }
+
+  progressbar {
+    margin-left: 3px;
+
+    trough {
+      min-width: 60px;
+      min-height: 10px;
+      background-color: rgba(ensure-background($color-disk), 0.2);
+      border-radius: 4px;
+
+      progress {
+        background-color: ensure-visibility($color-disk);
         border-radius: 4px;
         min-height: 10px;
       }
@@ -151,38 +232,45 @@ $module-padding: 0.5rem 1rem;
 }
 
 .network {
-  background-color: rgba($color-network, $bg-opacity);
-  color: $color-network;
+  background-color: rgba(ensure-background($color-network), $bg-opacity-strong);
+  color: ensure-visibility($color-network);
+
+  .divider {
+    border-right: 1px solid rgba($color-network, 0.3);
+    margin: 0px 4px;
+  }
 }
 
-.wifi {
-  background-color: rgba($color-wifi, $bg-opacity);
-  color: $color-wifi;
+.bluetooth {
+  background-color: rgba(ensure-background($color-bluetooth), $bg-opacity-strong);
+  color: ensure-visibility($color-bluetooth);
 
-  .ip {
-    opacity: 0.8;
-    font-size: $font-size-sm;
+  &.disabled {
+    opacity: 0.9;
+    background-color: rgba(ensure-background($color-bluetooth), $bg-opacity-strong);
+    color: ensure-visibility($color-bluetooth);
   }
 }
 
 .volume {
-  background-color: rgba($color-volume, $bg-opacity);
-  color: $color-volume;
+  background-color: rgba(ensure-background($color-volume), $bg-opacity-strong);
+  color: ensure-visibility($color-volume);
 }
 
 .battery {
-  background-color: rgba($color-battery, $bg-opacity);
-  color: $color-battery;
-  &.danger {
-  color: $color-danger;
-  background-color: rgba($color-danger, $bg-opacity);
-}
-}
+  background-color: rgba(ensure-background($color-battery), $bg-opacity-strong);
+  color: ensure-visibility($color-battery);
 
+  &.danger {
+    $battery-danger: tint-with-danger($color-battery);
+    color: ensure-visibility($battery-danger);
+    background-color: rgba(ensure-background($battery-danger), $bg-opacity-strong);
+  }
+}
 
 .time {
-  background-color: rgba($color-time, $bg-opacity);
-  color: $color-time;
+  background-color: rgba(ensure-background($color-time), $bg-opacity-strong);
+  color: ensure-visibility($color-time);
 }
 
 // Status Section
@@ -190,18 +278,17 @@ $module-padding: 0.5rem 1rem;
   padding-right: 1rem;
 }
 
-
 // Progress Bar Component
 .progressBar {
   $progress-border-radius: 50px;
   $progress-height: 11px;
 
-  background: $base-color;
+  background: ensure-background($base-color);
   padding: 2px 8px;
   border-radius: $progress-border-radius;
 
   label {
-    color: $color-network;
+    color: ensure-visibility($color-network);
     margin-right: 10px;
     font-size: 20px;
   }
@@ -210,11 +297,11 @@ $module-padding: 0.5rem 1rem;
     trough {
       min-width: 200px;
       min-height: $progress-height;
-      background: $surface-1;
+      background: ensure-background($surface-1);
       border-radius: $progress-border-radius;
 
       progress {
-        background: $color-network;
+        background: ensure-visibility($color-network);
         border-radius: $progress-border-radius;
         min-height: $progress-height;
       }
@@ -224,7 +311,7 @@ $module-padding: 0.5rem 1rem;
 
 // Calendar
 .calendar-module {
-  background-color: rgba(26, 26, 26, 0.85);
+  background-color: rgba(ensure-background($base-color), 0.85);
   border-radius: 10px;
   padding: 1rem;
 
@@ -232,32 +319,32 @@ $module-padding: 0.5rem 1rem;
     padding: 5px;
 
     :selected {
-      color: #1e1e2e;
-      background-color: #4ade80;
+      color: $base-color;
+      background-color: ensure-visibility($color-battery);
       border-radius: 4px;
     }
 
     .header {
-      color: #4ade80;
+      color: ensure-visibility($color-battery);
       font-weight: bold;
     }
 
     .button {
-      color: #a855f7;
+      color: ensure-visibility($color-volume);
 
       &:hover {
-        background-color: rgba(255, 255, 255, 0.1);
+        background-color: rgba(ensure-background($surface-1), 0.1);
         border-radius: 4px;
       }
     }
 
     .highlight {
-      color: #4ade80;
+      color: ensure-visibility($color-battery);
       font-weight: bold;
     }
 
     :indeterminate {
-      color: rgba(255, 255, 255, 0.3);
+      color: rgba($surface-1, 0.3);
     }
   }
 }

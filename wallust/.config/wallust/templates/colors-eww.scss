@@ -1,0 +1,227 @@
+@use "sass:string";
+@use "sass:list";
+@use "sass:math";
+@use "sass:color";
+@use "sass:meta";
+
+// Function to convert hex colour to RGB values for sorting
+@function hex-to-rgb($hex) {
+  // Convert colour to string if it isn't already
+  $hex-string: if(meta.type-of($hex) == color, color.ie-hex-str($hex), $hex);
+  $hex-string: string.slice($hex-string, 2); // Remove the #
+
+  $r: hex-to-decimal(string.slice($hex-string, 1, 2));
+  $g: hex-to-decimal(string.slice($hex-string, 3, 4));
+  $b: hex-to-decimal(string.slice($hex-string, 5, 6));
+  @return ($r, $g, $b);
+}
+
+// Helper function to convert hex digits to decimal
+@function hex-to-decimal($hex) {
+  $decimal: 0;
+  $hex: string.to-upper-case($hex);
+  $length: string.length($hex);
+
+  @for $i from 1 through $length {
+    $char: string.slice($hex, $i, $i);
+    $value: 0;
+
+    @if $char == 'A' { $value: 10; }
+    @else if $char == 'B' { $value: 11; }
+    @else if $char == 'C' { $value: 12; }
+    @else if $char == 'D' { $value: 13; }
+    @else if $char == 'E' { $value: 14; }
+    @else if $char == 'F' { $value: 15; }
+    @else {
+      // Convert string digit to number
+      $value: 0;
+      @if $char == '0' { $value: 0; }
+      @else if $char == '1' { $value: 1; }
+      @else if $char == '2' { $value: 2; }
+      @else if $char == '3' { $value: 3; }
+      @else if $char == '4' { $value: 4; }
+      @else if $char == '5' { $value: 5; }
+      @else if $char == '6' { $value: 6; }
+      @else if $char == '7' { $value: 7; }
+      @else if $char == '8' { $value: 8; }
+      @else if $char == '9' { $value: 9; }
+    }
+
+    $decimal: $decimal + ($value * math.pow(16, $length - $i));
+  }
+
+  @return $decimal;
+}
+
+// Function to convert RGB to HSL for colour sorting
+@function rgb-to-hsl($r, $g, $b) {
+  $r: math.div($r, 255);
+  $g: math.div($g, 255);
+  $b: math.div($b, 255);
+
+  $max: math.max($r, $g, $b);
+  $min: math.min($r, $g, $b);
+  $diff: $max - $min;
+
+  // Lightness
+  $l: math.div($max + $min, 2);
+
+  // Saturation
+  $s: 0;
+  @if $diff != 0 {
+    $s: if($l > 0.5, math.div($diff, 2 - $max - $min), math.div($diff, $max + $min));
+  }
+
+  // Hue
+  $h: 0;
+  @if $diff != 0 {
+    @if $max == $r {
+      $h: math.div($g - $b, $diff) + if($g < $b, 6, 0);
+    } @else if $max == $g {
+      $h: math.div($b - $r, $diff) + 2;
+    } @else {
+      $h: math.div($r - $g, $diff) + 4;
+    }
+    $h: math.div($h, 6);
+  }
+
+  @return ($h * 360, $s * 100, $l * 100);
+}
+
+// Function to remap hue for R,G,B sorting order
+@function remap-hue-for-rgb-order($hue) {
+  // Standard hue wheel: 0°=Red, 120°=Green, 240°=Blue
+  // We want: Red(0-120) -> 0-120, Green(120-240) -> 360-480, Blue(240-360) -> 240-360
+  // This makes sorting order: Red, Blue, Green
+  // But we want Red, Green, Blue, so:
+
+  @if $hue >= 0 and $hue < 60 {
+    // Red to Yellow -> 0-60 (Red family)
+    @return $hue;
+  } @else if $hue >= 60 and $hue < 180 {
+    // Yellow to Cyan -> 360-480 (Green family, moved to end)
+    @return $hue + 300;
+  } @else if $hue >= 180 and $hue < 300 {
+    // Cyan to Magenta -> 120-240 (Blue family, moved to middle)
+    @return $hue - 60;
+  } @else {
+    // Magenta to Red -> 300-360 -> 0-60 (Red family continued)
+    @return $hue - 300;
+  }
+}
+
+// Function to calculate sorting value (remapped hue primary, lightness secondary)
+@function colour-sort-value($r, $g, $b) {
+  $hsl: rgb-to-hsl($r, $g, $b);
+  $hue: list.nth($hsl, 1);
+  $lightness: list.nth($hsl, 3);
+
+  // Remap hue for R,G,B order
+  $remapped-hue: remap-hue-for-rgb-order($hue);
+
+  // Use remapped hue as primary sort key (scaled up) and lightness as secondary
+  @return ($remapped-hue * 1000) + $lightness;
+}
+
+// Main function to sort colours and assign them
+@function sort-and-assign-colours($colors-map) {
+  // Create list of colours with their sort values (hue + lightness)
+  $color-sort-pairs: ();
+
+  @each $name, $colour in $colors-map {
+    $rgb: hex-to-rgb($colour);
+    $r: list.nth($rgb, 1);
+    $g: list.nth($rgb, 2);
+    $b: list.nth($rgb, 3);
+    $sort-value: colour-sort-value($r, $g, $b);
+    $hsl: rgb-to-hsl($r, $g, $b);
+    $hue: list.nth($hsl, 1);
+    $lightness: list.nth($hsl, 3);
+
+    $remapped-hue: remap-hue-for-rgb-order($hue);
+
+    $color-sort-pairs: list.append($color-sort-pairs, ($name, $colour, $sort-value, $hue, $lightness, $remapped-hue));
+  }
+
+  // Sort by colour value (hue primary, lightness secondary)
+  $sorted-pairs: $color-sort-pairs;
+  $length: list.length($sorted-pairs);
+
+  @for $i from 1 through $length - 1 {
+    @for $j from 1 through ($length - $i) {
+      @if $j < $length {
+        $current: list.nth($sorted-pairs, $j);
+        $next: list.nth($sorted-pairs, $j + 1);
+
+        @if list.nth($current, 3) > list.nth($next, 3) {
+          $temp: $current;
+          $sorted-pairs: list.set-nth($sorted-pairs, $j, $next);
+          $sorted-pairs: list.set-nth($sorted-pairs, $j + 1, $temp);
+        }
+      }
+    }
+  }
+
+  @return $sorted-pairs;
+}
+
+// Your original colour definitions
+$background: {{background}};
+$foreground: {{foreground}};
+$color0: {{color0}};
+$color1: {{color1}};
+$color2: {{color2}};
+$color3: {{color3}};
+$color4: {{color4}};
+$color5: {{color5}};
+$color6: {{color6}};
+$color7: {{color7}};
+$color8: {{color8}};
+$color9: {{color9}};
+$color10: {{color10}};
+$color11: {{color11}};
+$color12: {{color12}};
+$color13: {{color13}};
+$color14: {{color14}};
+$color15: {{color15}};
+
+// Create map of the specific colours you want to sort and assign
+$assignable-colors: (
+  'color-cpu': $color12,
+  'color-memory': $color5,
+  'color-disk': $color14,
+  'color-network': $color10,
+  'color-bluetooth': $color8,
+  'color-volume': $color13,
+  'color-battery': $color11,
+  'color-time': $color1,
+  'color-current-workspace': $color12
+);
+
+// Sort the colours
+$sorted-colors: sort-and-assign-colours($assignable-colors);
+
+// Extract sorted colour values in order
+$sorted-color-values: ();
+@each $pair in $sorted-colors {
+  $sorted-color-values: list.append($sorted-color-values, list.nth($pair, 2));
+}
+
+// Assign sorted colours to your variables (keeping the same variable names)
+$base-color: $background;
+$surface-1: $foreground;
+$color-cpu: list.nth($sorted-color-values, 1);      // Darkest
+$color-memory: list.nth($sorted-color-values, 2);
+$color-disk: list.nth($sorted-color-values, 3);
+$color-network: list.nth($sorted-color-values, 4);
+$color-bluetooth: list.nth($sorted-color-values, 5);
+$color-volume: list.nth($sorted-color-values, 6);
+$color-battery: list.nth($sorted-color-values, 7);
+$color-time: list.nth($sorted-color-values, 8);
+$color-current-workspace: list.nth($sorted-color-values, 9); // Brightest
+
+// Debug output to see the sorting result
+@debug "Sorted colours in R,G,B order by hue then lightness:";
+@each $pair in $sorted-colors {
+  @debug "#{list.nth($pair, 1)}: #{list.nth($pair, 2)} (original hue: #{math.round(list.nth($pair, 4))}°, remapped: #{math.round(list.nth($pair, 6))}°, lightness: #{math.round(list.nth($pair, 5))}%)";
+}

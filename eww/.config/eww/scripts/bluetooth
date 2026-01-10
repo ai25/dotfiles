@@ -1,0 +1,96 @@
+#!/bin/bash
+
+get_bluetooth_info() {
+    # Check if bluetoothctl command exists
+    if ! command -v bluetoothctl &> /dev/null; then
+        echo '{"power": "off", "connected": false, "device_name": ""}'
+        return
+    fi
+    
+    # Get bluetooth power status
+    local power_status
+    power_status=$(bluetoothctl show 2>/dev/null | grep "Powered:" | awk '{print $2}')
+    
+    if [ "$power_status" != "yes" ]; then
+        echo '{"power": "off", "connected": false, "device_name": ""}'
+        return
+    fi
+    
+    # Bluetooth is powered on, check for connected devices
+    local connected_devices
+    connected_devices=$(bluetoothctl devices Connected 2>/dev/null | grep -v "hci0")
+    
+    # Filter out any lines that don't look like device entries (should have "Device XX:XX:XX:XX:XX:XX")
+    connected_devices=$(echo "$connected_devices" | grep "^Device [0-9A-Fa-f:]\{17\}")
+    
+    if [ -z "$connected_devices" ]; then
+        # No connected devices, but bluetooth is on
+        echo '{"power": "on", "connected": false, "device_name": ""}'
+        return
+    fi
+    
+    # Get the MAC address and device name of the first connected device
+    local device_line device_mac device_name
+    device_line=$(echo "$connected_devices" | head -n1)
+    device_mac=$(echo "$device_line" | awk '{print $2}')
+    device_name=$(echo "$device_line" | cut -d' ' -f3-)
+    
+    # Clean up device name (remove extra whitespace)
+    device_name=$(echo "$device_name" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    
+    # Validate that we have a proper MAC address
+    if [[ ! "$device_mac" =~ ^[0-9A-Fa-f:]{17}$ ]]; then
+        echo '{"power": "on", "connected": false, "device_name": ""}'
+        return
+    fi
+    
+    # If device name is empty or looks like a path, get it from device info
+    if [ -z "$device_name" ] || [[ "$device_name" =~ ^/org/ ]]; then
+        device_name=$(bluetoothctl info "$device_mac" 2>/dev/null | grep "Name:" | cut -d':' -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    fi
+    
+    # Final validation - if still empty or invalid, no real device connected
+    if [ -z "$device_name" ] || [[ "$device_name" =~ ^/org/ ]]; then
+        echo '{"power": "on", "connected": false, "device_name": ""}'
+        return
+    fi
+    
+    echo "{\"power\": \"on\", \"connected\": true, \"device_name\": \"$device_name\"}"
+}
+
+# Entry point
+if [ "$1" == "--present" ]; then
+    # Check if Bluetooth hardware is present
+    if command -v bluetoothctl &> /dev/null; then
+        # Check if there's a bluetooth controller
+        if bluetoothctl list 2>/dev/null | grep -q "Controller"; then
+            echo true
+        else
+            echo false
+        fi
+    else
+        echo false
+    fi
+    exit 0
+fi
+
+# Broadcast mode for deflisten
+previous_status=""
+
+# Output initial status
+current_status=$(get_bluetooth_info)
+echo "$current_status"
+previous_status="$current_status"
+
+# Monitor bluetooth events and poll for changes
+while true; do
+    sleep 2
+    
+    current_status=$(get_bluetooth_info)
+    
+    # Only output if status changed
+    if [ "$current_status" != "$previous_status" ]; then
+        echo "$current_status"
+        previous_status="$current_status"
+    fi
+done

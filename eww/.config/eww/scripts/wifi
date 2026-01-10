@@ -1,49 +1,83 @@
 #!/bin/bash
 
 get_wifi_info() {
-    # Get the current wireless device
-    device=$(nmcli -t -f DEVICE,TYPE device | grep ":wifi$" | cut -d':' -f1)
-    
-    if [ -z "$device" ]; then
-        echo '{"ssid": "No WiFi", "strength": 0, "ip": ""}'
-        return
-    fi
-    
-    # Get connection info for the wireless device
-    connection_info=$(nmcli -t -f DEVICE,STATE,CONNECTION device | grep "^$device:" 2>/dev/null)
-    
-    if [ -z "$connection_info" ] || [[ $connection_info == *"disconnected"* ]]; then
-        echo '{"ssid": "Disconnected", "strength": 0, "ip": ""}'
-        return
-    fi
-    
-    # Get SSID
-    ssid=$(echo "$connection_info" | cut -d':' -f3)
-    
-    # Get signal strength from device wifi list
-    strength=$(nmcli -f IN-USE,SIGNAL device wifi list | grep "^*" | awk '{print $2}')
-    
-    # If no signal strength is found, default to 0
-    if [ -z "$strength" ]; then
-        strength=0
-    fi
-    
-    # Get IP address
-    ip=$(ip -json addr show dev "$device" | jq -r '.[].addr_info[] | select(.family == "inet") | .local' 2>/dev/null)
-    
-    # If no IP is found, use empty string
-    if [ -z "$ip" ]; then
-        ip=""
-    fi
-    
-    echo "{\"ssid\": \"$ssid\", \"strength\": $strength, \"ip\": \"$ip\"}"
+  # Find WiFi device
+  device=$(nmcli -t -f DEVICE,TYPE device | grep ":wifi$" | cut -d':' -f1)
+  
+  if [ -z "$device" ]; then
+    echo '{"ssid": "No WiFi", "strength": 0, "ip": ""}'
+    return
+  fi
+  
+  # Check if WiFi radio is enabled
+  wifi_enabled=$(nmcli radio wifi)
+  if [ "$wifi_enabled" != "enabled" ]; then
+    echo '{"ssid": "WiFi Disabled", "strength": 0, "ip": ""}'
+    return
+  fi
+  
+  # Get connection state for the device
+  connection_state=$(nmcli -t -f DEVICE,STATE device | grep "^$device:" | cut -d':' -f2)
+  
+  if [ "$connection_state" != "connected" ]; then
+    echo '{"ssid": "Disconnected", "strength": 0, "ip": ""}'
+    return
+  fi
+  
+  # Get active connection name (which is usually the SSID)
+  ssid=$(nmcli -t -f DEVICE,CONNECTION device | grep "^$device:" | cut -d':' -f2)
+  
+  # If ssid is empty or shows '--', try alternative method
+  if [ -z "$ssid" ] || [ "$ssid" = "--" ]; then
+    ssid=$(nmcli -t -f NAME connection show --active | head -n1)
+  fi
+  
+  # Get signal strength from currently connected AP
+  strength=$(nmcli -f IN-USE,SIGNAL device wifi list 2>/dev/null | grep "^\*" | awk '{print $2}' | head -n1)
+  [ -z "$strength" ] && strength=0
+  
+  # Get IP address - more robust approach
+  ip=$(nmcli -t -f IP4.ADDRESS device show "$device" 2>/dev/null | cut -d':' -f2 | cut -d'/' -f1)
+  
+  # Fallback to ip command if nmcli doesn't return IP
+  if [ -z "$ip" ]; then
+    ip=$(ip -4 addr show dev "$device" 2>/dev/null | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | head -n1)
+  fi
+  
+  [ -z "$ip" ] && ip=""
+  [ -z "$ssid" ] && ssid="Unknown"
+  
+  echo "{\"ssid\": \"$ssid\", \"strength\": $strength, \"ip\": \"$ip\"}"
 }
 
-# Initial state
-get_wifi_info
+# Entry point
+if [ "$1" == "--present" ]; then
+  # Check if WiFi device exists (regardless of radio state)
+  if nmcli -t -f DEVICE,TYPE device | grep -q ":wifi$"; then
+    echo true
+  else
+    echo false
+  fi
+  exit 0
+fi
 
-# Monitor changes every 30 seconds
+# Default run mode
+previous_status=""
+
+# Output initial status
+current_status=$(get_wifi_info)
+echo "$current_status"
+previous_status="$current_status"
+
+# Monitor wifi events and poll for changes
 while true; do
-    sleep 30
-    get_wifi_info
+    sleep 2
+    
+    current_status=$(get_wifi_info)
+    
+    # Only output if status changed
+    if [ "$current_status" != "$previous_status" ]; then
+        echo "$current_status"
+        previous_status="$current_status"
+    fi
 done

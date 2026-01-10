@@ -1,9 +1,20 @@
 #!/bin/bash
 
 get_workspaces() {
-  # Get active workspace
-  active=$(hyprctl activeworkspace -j | jq '.id')
-  active_special=$(hyprctl activewindow -j | jq -r '.workspace.name' | grep -q "special:" && echo "true" || echo "false")
+  # Get active workspace info
+  active_regular=$(hyprctl activeworkspace -j | jq '.id')
+  active_window_workspace=$(hyprctl activewindow -j | jq -r '.workspace.id // empty')
+  
+  # Determine which workspace is actually active
+  if [ -n "$active_window_workspace" ] && [ "$active_window_workspace" -lt 0 ]; then
+    # Special workspace is active
+    active=$active_window_workspace
+    active_special="true"
+  else
+    # Regular workspace is active
+    active=$active_regular
+    active_special="false"
+  fi
 
   # Separate arrays for regular and special workspaces
   regular_spaces=()
@@ -19,8 +30,8 @@ get_workspaces() {
 
     # Check if it's a special workspace
     if [[ "$name" == special* ]]; then
-      special_num=$((101 + id))
-      display_name="S${special_num}"
+      # Extract the part after "special:" (e.g., "sp1" from "special:sp1")
+      display_name="${name#special:}"
 
       if [ "$id" = "$active" ] && [ "$active_special" = "true" ]; then
         special_spaces+=("{\"id\":$id,\"focused\":true,\"special\":true,\"name\":\"$display_name\"}")

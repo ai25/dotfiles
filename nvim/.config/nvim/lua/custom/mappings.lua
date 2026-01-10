@@ -3,12 +3,6 @@ local M = {}
 
 M.general = {
 	n = {
-		--tmux
-		["<C-h>"] = { "<cmd>TmuxNavigateLeft<cr>", "Tmux Navigate Left" },
-		["<C-j>"] = { "<cmd>TmuxNavigateDown<cr>", "Tmux Navigate Down" },
-		["<C-k>"] = { "<cmd>TmuxNavigateUp<cr>", "Tmux Navigate Up" },
-		["<C-l>"] = { "<cmd>TmuxNavigateRight<cr>", "Tmux Navigate Right" },
-
 		-- Configuration
 		["<leader>."] = { "+Config" },
 		["<leader>.l"] = { "<cmd>set nu!<cr>", "Toggle Line Numbers" },
@@ -27,7 +21,6 @@ M.general = {
 		["<leader>fk"] = { "<cmd> Telescope keymaps <CR>", "Show Keys" },
 
 		["<leader>p"] = { "<cmd>Telescope projects<cr>", "Projects" },
-		["<leader>t"] = { "<cmd>TroubleToggle<cr>", "Trouble" },
 		["<leader>wf"] = { "<cmd>let g:neovide_fullscreen=!g:neovide_fullscreen<cr>", "Toggle Fullscreen" },
 
 		["<leader>?"] = {
@@ -53,6 +46,109 @@ M.general = {
 				require("telescope.builtin").git_files()
 			end,
 			"Search [G]it [F]iles",
+		},
+
+		-- Telescope - organised with 't' prefix
+		["<leader>t"] = { "+Telescope" },
+
+		-- File finding
+		["<leader>tf"] = { "<cmd>Telescope find_files<cr>", "Find Files" },
+		["<leader>ta"] = { "<cmd>Telescope find_files follow=true no_ignore=true hidden=true<cr>", "Find All Files" },
+		["<leader>tr"] = { "<cmd>Telescope oldfiles<cr>", "Recent Files" },
+		["<leader>td"] = { "<cmd>Telescope file_browser<cr>", "File Browser" },
+		["<leader>tp"] = { "<cmd>Telescope projects<cr>", "Projects" },
+
+		-- Text searching
+		["<leader>tg"] = { "<cmd>Telescope live_grep<cr>", "Live Grep" },
+		["<leader>tw"] = { "<cmd>Telescope grep_string<cr>", "Grep Word Under Cursor" },
+		["<leader>ts"] = { "<cmd>Telescope current_buffer_fuzzy_find<cr>", "Search in Current Buffer" },
+		["<leader>tG"] = { "<cmd>Telescope live_grep_args<cr>", "Live Grep with Args" },
+
+		-- Buffers and tabs
+		["<leader>tb"] = { "<cmd>Telescope buffers<cr>", "Find Buffers" },
+		["<leader>tt"] = { "<cmd>Telescope tabs<cr>", "Find Tabs" },
+
+		-- Git integration
+		["<leader>tgf"] = { "<cmd>Telescope git_files<cr>", "Git Files" },
+		["<leader>tgc"] = { "<cmd>Telescope git_commits<cr>", "Git Commits" },
+		["<leader>tgb"] = { "<cmd>Telescope git_branches<cr>", "Git Branches" },
+		["<leader>tgs"] = { "<cmd>Telescope git_status<cr>", "Git Status" },
+		["<leader>tgh"] = { "<cmd>Telescope git_stash<cr>", "Git Stash" },
+
+		-- LSP integration
+		["<leader>tl"] = { "+LSP" },
+		["<leader>tlr"] = { "<cmd>Telescope lsp_references<cr>", "LSP References" },
+		["<leader>tld"] = { "<cmd>Telescope lsp_definitions<cr>", "LSP Definitions" },
+		["<leader>tli"] = { "<cmd>Telescope lsp_implementations<cr>", "LSP Implementations" },
+		["<leader>tlt"] = { "<cmd>Telescope lsp_type_definitions<cr>", "LSP Type Definitions" },
+		["<leader>tls"] = { "<cmd>Telescope lsp_document_symbols<cr>", "Document Symbols" },
+		["<leader>tlw"] = { "<cmd>Telescope lsp_workspace_symbols<cr>", "Workspace Symbols" },
+		["<leader>tle"] = { "<cmd>Telescope diagnostics<cr>", "Diagnostics" },
+		["<leader>tla"] = { "<cmd>Telescope lsp_code_actions<cr>", "Code Actions" },
+
+		-- Vim integration
+		["<leader>tv"] = { "+Vim" },
+		["<leader>tvh"] = { "<cmd>Telescope help_tags<cr>", "Help Tags" },
+		["<leader>tvk"] = { "<cmd>Telescope keymaps<cr>", "Keymaps" },
+		["<leader>tvc"] = { "<cmd>Telescope commands<cr>", "Commands" },
+		["<leader>tvC"] = { "<cmd>Telescope command_history<cr>", "Command History" },
+		["<leader>tvs"] = { "<cmd>Telescope search_history<cr>", "Search History" },
+		["<leader>tvo"] = { "<cmd>Telescope vim_options<cr>", "Vim Options" },
+		["<leader>tvr"] = { "<cmd>Telescope registers<cr>", "Registers" },
+		["<leader>tvm"] = { "<cmd>Telescope marks<cr>", "Marks" },
+		["<leader>tvj"] = { "<cmd>Telescope jumplist<cr>", "Jump List" },
+		["<leader>tvl"] = { "<cmd>Telescope loclist<cr>", "Location List" },
+		["<leader>tvq"] = { "<cmd>Telescope quickfix<cr>", "Quickfix List" },
+
+		-- Treesitter integration
+		["<leader>tT"] = { "<cmd>Telescope treesitter<cr>", "Treesitter Symbols" },
+
+		-- Extensions and special features
+		["<leader>te"] = { "+Extensions" },
+		["<leader>tey"] = { "<cmd>Telescope yank_history<cr>", "Yank History" },
+		["<leader>tem"] = { "<cmd>Telescope media_files<cr>", "Media Files" },
+		["<leader>teu"] = { "<cmd>Telescope undo<cr>", "Undo Tree" },
+		["<leader>ten"] = { "<cmd>Telescope notify<cr>", "Notifications" },
+
+		-- Custom telescope functions
+		["<leader>tF"] = {
+			function()
+				require("telescope.builtin").find_files({
+					cwd = vim.fn.expand("~/.config/nvim"),
+					prompt_title = "Neovim Config Files",
+				})
+			end,
+			"Find Neovim Config Files",
+		},
+		["<leader>tD"] = {
+			function()
+				require("telescope.builtin").find_files({
+					cwd = vim.fn.expand("~/dotfiles"),
+					prompt_title = "Dotfiles",
+				})
+			end,
+			"Find Dotfiles",
+		},
+
+		["<leader>tH"] = {
+			function()
+				require("telescope.builtin").find_files({
+					cwd = vim.fn.expand("~"),
+					prompt_title = "Home Directory Files",
+					hidden = true,
+					no_ignore = true,
+				})
+			end,
+			"Find Files in Home Directory",
+		},
+		["<leader>tGH"] = {
+			function()
+				require("telescope.builtin").live_grep({
+					cwd = vim.fn.expand("~"),
+					prompt_title = "Grep in Home Directory",
+				})
+			end,
+			"Grep in Home Directory",
 		},
 
 		["<leader>c"] = { "+Coding" },
@@ -158,6 +254,24 @@ M.general = {
 		[">y"] = { "<Plug>(YankyPutIndentAfterShiftRight)", "Yanky Put After (Shift Right)" },
 		["<y"] = { "<Plug>(YankyPutIndentAfterShiftLeft)", "Yanky Put After (Shift Left)" },
 		["=y"] = { "<Plug>(YankyPutAfterFilter)", "Yanky Put After (Filter)" },
+		["<leader>e"] = {
+			function()
+				Set_cd_to_git_root()
+				vim.cmd("NvimTreeToggle")
+			end,
+			"Focus neotree",
+		},
+		["<C-space>"] = {
+			function()
+				if vim.bo.filetype == "NvimTree" then
+					vim.cmd("wincmd l")
+				else
+					vim.cmd("NvimTreeFocus")
+				end
+			end,
+			"",
+		},
+		["<C-c"] = { "<Esc>", "" },
 	},
 	x = {
 		-- Visual mode mappings
@@ -166,6 +280,7 @@ M.general = {
 		["P"] = { "<Plug>(YankyPutBefore)", "Yanky Put Before" },
 		["gp"] = { "<Plug>(YankyGPutAfter)", "Yanky GPut After" },
 		["gP"] = { "<Plug>(YankyGPutBefore)", "Yanky GPut Before" },
+		["<C-c"] = { "<Esc>", "" },
 	},
 
 	-- Add text object for yanked text
@@ -185,6 +300,38 @@ M.general = {
 			end,
 			"Yanky Text Object",
 		},
+		-- ["ga"] = {
+		-- 	function()
+		-- 		-- Step 1: capture the next character
+		-- 		local char = vim.fn.nr2char(vim.fn.getchar())
+		--
+		-- 		-- Step 2: define the operator function
+		-- 		_G.easy_align_operator = function(type)
+		-- 			local start_line, end_line
+		--
+		-- 			if type == "line" then
+		-- 				start_line = vim.fn.line("'<") - 1
+		-- 				end_line = vim.fn.line("'>")
+		-- 			else
+		-- 				-- fallback: use cursor line only
+		-- 				start_line = vim.fn.line(".") - 1
+		-- 				end_line = start_line + 1
+		-- 			end
+		--
+		-- 			-- construct and run the command
+		-- 			local escaped = vim.fn.escape(char, "\\")
+		-- 			vim.cmd(string.format(":%d,%dEasyAlign */[%s]/", start_line + 1, end_line, escaped))
+		-- 		end
+		--
+		-- 		-- Step 3: assign operatorfunc and call g@
+		-- 		vim.go.operatorfunc = "v:lua.easy_align_operator"
+		-- 		vim.api.nvim_feedkeys("g@", "n", false)
+		-- 	end,
+		-- 	"EasyAlign - prompt for delimiter",
+		-- },
+	},
+	i = {
+		["<C-BS>"] = { "<C-W>", "delete word" },
 	},
 }
 
@@ -324,5 +471,17 @@ M.yanky = {
 
 	n = {},
 }
+
+function Set_cd_to_git_root()
+	local buffer_dir = vim.fn.expand("%:p:h")
+	buffer_dir = vim.fn.fnameescape(buffer_dir)
+	local is_git_repo = vim.fn.system("cd " .. buffer_dir .. " && git rev-parse --is-inside-work-tree")
+	if is_git_repo:find("true") then
+		local git_root = vim.fn.system("cd " .. buffer_dir .. " && git rev-parse --show-toplevel"):gsub("\n", "")
+		vim.cmd("cd " .. vim.fn.fnameescape(git_root))
+	else
+		print("No git root found")
+	end
+end
 
 return M

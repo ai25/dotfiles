@@ -30,6 +30,7 @@ M.treesitter = {
 		"vue",
 		"xml",
 		"zig",
+		"go",
 	},
 	indent = {
 		enable = true,
@@ -46,6 +47,7 @@ M.treesitter = {
 			if ok and stats and stats.size > max_filesize then
 				return true
 			end
+			return { "html", "markdown" }
 		end,
 	},
 }
@@ -70,12 +72,11 @@ M.mason = {
 		"stylelint",
 		"typescript-language-server",
 		"json-lsp",
-		"cssls",
-		"ts_ls",
 		"tailwindcss",
 		"tailwindcss-language-server",
 		"tinymist",
 		"marksman",
+		"vscode-json-language-server",
 
 		"markdownlint",
 		"mdx-analyzer",
@@ -96,9 +97,11 @@ M.mason = {
 		"codespell",
 
 		--python
-		"python-lsp-server",
-		"pyright",
+		"basedpyright",
 		"pylint",
+
+		--go
+		"gopls",
 	},
 }
 

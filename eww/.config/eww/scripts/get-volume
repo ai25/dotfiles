@@ -1,18 +1,22 @@
 #!/bin/bash
 
 get_volume() {
-    # Get default sink name
-    sink=$(pactl get-default-sink)
-    
-    # Get volume and mute status
-    volume=$(pactl get-sink-volume "$sink" | grep -oP '\d+(?=%)' | head -n 1)
-    mute=$(pactl get-sink-mute "$sink" | awk '{print $2}')
-    
-    if [[ "$mute" == "yes" ]]; then
-        echo "[\"muted\", \"$volume\"]"
-    else
-        echo "[\"unmuted\", \"$volume\"]"
-    fi
+  # Get default sink name
+  default_sink=$(pactl get-default-sink)
+
+  # Get volume and mute status for the default sink
+  volume_info=$(pactl get-sink-volume "$default_sink")
+  mute_info=$(pactl get-sink-mute "$default_sink")
+
+  # Extract volume percentage (first channel only)
+  vol=$(echo "$volume_info" | grep -oP '\d+%' | head -1 | tr -d '%')
+
+  # Check mute status
+  if [[ "$mute_info" == *"yes" ]]; then
+    echo "[\"muted\", \"0\"]"
+  else
+    echo "[\"unmuted\", \"$vol\"]"
+  fi
 }
 
 # Initial volume
@@ -20,7 +24,7 @@ get_volume
 
 # Monitor for volume changes
 pactl subscribe | while read -r line; do
-    if [[ $line == *"sink"* ]]; then
-        get_volume
-    fi
+  if [[ $line == *"sink"* ]]; then
+    get_volume
+  fi
 done

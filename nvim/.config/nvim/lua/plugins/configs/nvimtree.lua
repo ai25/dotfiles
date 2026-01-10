@@ -1,4 +1,3 @@
-
 local options = {
 	filters = {
 		dotfiles = false,
@@ -21,7 +20,7 @@ local options = {
 	},
 	git = {
 		enable = false,
-		ignore = false,
+		ignore = true,
 	},
 	filesystem_watchers = {
 		enable = true,

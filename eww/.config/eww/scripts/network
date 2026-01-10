@@ -2,7 +2,12 @@
 
 get_bytes() {
     # Find active network interface
-    interface=$(ip route get 1.1.1.1 2>/dev/null | grep -Po '(?<=dev\s)\w+' | cut -f1 -d ' ')
+    interface=$(ip -o link show | awk -F': ' '$2 !~ /lo/ {print $2}' | while read iface; do
+    if ip addr show "$iface" | grep -q "inet "; then
+        echo "$iface"
+        break
+    fi
+done)
     
     # If no interface is found, try getting the first non-loopback interface
     if [ -z "$interface" ]; then
@@ -36,23 +41,26 @@ calculate_speed() {
     # Format speeds with units
     format_speed() {
         local bytes=$1
-        local kib=$(echo "scale=1; $bytes/1024" | bc)
-        
-        if (( $(echo "$kib > 1024" | bc -l) )); then
-            # Convert to MiB if over 1024 KiB
-            local mib=$(echo "scale=1; $kib/1024" | bc)
-            # Ensure we always show a leading zero
-            if [[ $mib == .* ]]; then
-                mib="0$mib"
-            fi
-            echo "${mib}MB/s"
+        if command -v bc >/dev/null 2>&1; then
+          kib=$(echo "scale=1; $bytes/1024" | bc)
+          if (( $(echo "$kib > 1024" | bc -l) )); then
+              mib=$(echo "scale=1; $kib/1024" | bc)
+              [ "${mib:0:1}" = "." ] && mib="0$mib"
+              echo "${mib}MB/s"
+          else
+              [ "${kib:0:1}" = "." ] && kib="0$kib"
+              echo "${kib}KB/s"
+          fi
         else
-            # Ensure we always show a leading zero
-            if [[ $kib == .* ]]; then
-                kib="0$kib"
+            kib=$((bytes / 1024))
+            if [ $kib -gt 1024 ]; then
+                mib=$((kib / 1024))
+                echo "${mib}MB/s"
+            else
+                echo "${kib}KB/s"
             fi
-            echo "${kib}KB/s"
         fi
+
     }
     
     # Calculate and format both speeds

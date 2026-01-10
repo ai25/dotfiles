@@ -6,6 +6,10 @@
 
 (deflisten wifi :initial "{\"ssid\": \"Disconnected\", \"strength\": 0}"
   "bash ~/.config/eww/scripts/wifi")
+(deflisten bluetooth :initial "{\"power\": \"off\", \"connected\": false, \"device_name\": \"\"}"
+  "bash ~/.config/eww/scripts/bluetooth")
+(deflisten vpn :initial "{\"status\": \"Disconnected\", \"country\": \"\", \"city\": \"\", \"ip\": \"\", \"relay\": \"\", \"flag\": \"🔴\"}"
+  "bash ~/.config/eww/scripts/vpn")
 
 (defpoll CPU_USAGE :interval "1s" "scripts/cpu --usage")
 (defpoll CPU_TEMP :interval "1s" "scripts/cpu --temp")
@@ -14,7 +18,12 @@
 (defpoll NETWORK_DOWN :interval "1s" "scripts/network --down")
 (defpoll BATTERY :interval "5s" "scripts/battery --percentage")
 (defpoll BATTERY_STATUS :interval "1s" "scripts/battery --status")
+(defpoll BATTERY_PRESENT :interval "10s" "scripts/battery --present")
 (defpoll DATETIME :interval "1s" "date '+%H:%M:%S %a, %d %b %Y'")
+(defpoll WIFI_PRESENT :interval "10s" "scripts/wifi --present")
+(defpoll VPN_PRESENT :interval "10s" "scripts/vpn --present")
+(defpoll BLUETOOTH_PRESENT :interval "10s" "scripts/bluetooth --present")
+
 
 (defvar calendar_visible false)
 (defpoll calendar_day :interval "1m" "date '+%d'")
@@ -69,18 +78,34 @@
     (memory-module)
     (disk-module)
     (network-module)
-    (wifi-module)
+    (bluetooth-module)
     (volume-module)
     (battery-module)
-    (time-module)))
+    (time-module)
+    ; (systray :class "module" :iconsize 4 :prepend-new true)
+    ))
 
 (defwidget cpu-module []
-  (box :class "module cpu"
+  (box :class "module cpu ${CPU_TEMP >= 60 ? 'warning':' '} ${CPU_TEMP >= 90 ? 'danger':''}"
        :orientation "h"
        :space-evenly false
        :spacing 4
     (label :text "󰻠 ")
     (label :text "${CPU_USAGE}%")
+
+    (progress
+             :valign "center"
+             :flipped false
+             :value "${CPU_USAGE}"
+             :orientation "h")
+    ; (circular-progress
+    ;          :clockwise true
+    ;          :start-at 0
+    ;          :value "${CPU_USAGE}"
+    ;          :thickness 10)
+
+      (box :class "divider")
+
     (label :text "${CPU_TEMP}°C")))
 
 (defwidget memory-module []
@@ -88,30 +113,32 @@
        :orientation "h"
        :space-evenly false
        :spacing 4
-    (label :text "󰍛 ")
-    (label :text "${round(EWW_RAM.used_mem_perc, 0)}%")))
+      (label :text "󰍛 ")
+      (label :text "${round(EWW_RAM.used_mem_perc, 0)}%")))
 
 (defwidget disk-module []
   (box :class "module disk"
        :orientation "h"
        :space-evenly false
        :spacing 4
-    (label :text "󰋊 ")
-(label :text "/" :class "label")
+      (label :text "󰋊 ")
+      (label :text "/" :class "label")
         (progress
-          :valign "center"
-                 :flipped false
-                 :value "${round((1 - (EWW_DISK['/'].free / EWW_DISK['/'].total)) * 100, 0)}"
-                 :orientation "h")
-    (label :class "value" :text "${round((1 - (EWW_DISK['/'].free / EWW_DISK['/'].total)) * 100, 0)}%")
-    (box :class "divider")
-(label :text "/home" :class "label")
+           :valign "center"
+           :flipped false
+           :value "${round((1 - (EWW_DISK['/'].free / EWW_DISK['/'].total)) * 100, 0)}"
+           :orientation "h")
+      (label :class "value" :text "${round((1 - (EWW_DISK['/'].free / EWW_DISK['/'].total)) * 100, 0)}%")
+
+      (box :class "divider")
+
+      (label :text "/home" :class "label")
         (progress
           :valign "center"
                  :flipped false
                  :value "${round((1 - (EWW_DISK['/home'].free / EWW_DISK['/home'].total)) * 100, 0)}"
                  :orientation "h")
-     (label :class "value" :text "${round((1 - (EWW_DISK['/home'].free / EWW_DISK['/home'].total)) * 100, 0)}%")))
+        (label :class "value" :text "${round((1 - (EWW_DISK['/home'].free / EWW_DISK['/home'].total)) * 100, 0)}%")))
 
 (defwidget network-module []
   (box :class "module network"
@@ -119,10 +146,54 @@
        :space-evenly false
        :spacing 4
     (label :text "󰀂 ")
-    (label :text "󰕒 ${NETWORK_UP} 󰇚 ${NETWORK_DOWN}")))
+    (label :text "󰕒 ${NETWORK_UP} 󰇚 ${NETWORK_DOWN}")
+
+    (box :visible WIFI_PRESENT
+         :class "divider")
+    ;; VPN status
+    (box :visible {VPN_PRESENT && vpn.status == "Connected"}
+         :class "vpn-status"
+         :orientation "h"
+         :space-evenly false
+         :spacing 4
+      (label :text {"󰖂 " + " " + vpn.flag})
+      (label :text {vpn.country != "" ? vpn.country : "VPN"}))
+
+    (box :visible {VPN_PRESENT && vpn.status == "Connected"}
+         :class "divider")
+
+    ;; WiFi status
+    (box :visible WIFI_PRESENT
+         :class "wifi-status"
+         :orientation "h"
+         :space-evenly false
+         :spacing 4
+      (label :text {wifi.strength >= 80 ? "󰤨 " :
+                    wifi.strength >= 60 ? "󰤥 " :
+                    wifi.strength >= 40 ? "󰤢 " :
+                    wifi.strength >= 20 ? "󰤟 " : "󰤯 "})
+      (label :text {wifi.ssid})
+      (label :class "ip" :text {wifi.ip != "" ? "(" + wifi.ip + ")" : ""}))))
+
+(defwidget vpn-module []
+  (box :visible VPN_PRESENT
+       :class "module vpn ${vpn.status == 'Connected' ? 'connected' : 'disconnected'}"
+       :orientation "h"
+       :space-evenly false
+       :spacing 4
+    (label :text {vpn.status == "Connected" ? "󰖂 " : "󰖂 "})
+    (label :text {vpn.flag})
+    (box :orientation "h"
+         :space-evenly false
+         :spacing 4
+         :visible {vpn.status == "Connected"}
+      (label :text {vpn.country != "" && vpn.city != "" ? vpn.country + ", " + vpn.city :
+                    vpn.country != "" ? vpn.country : "Connected"})
+      (label :class "ip" :text {vpn.ip != "" ? "(" + vpn.ip + ")" : ""}))))
 
 (defwidget wifi-module []
-  (box :class "module wifi"
+  (box :visible WIFI_PRESENT
+       :class "module wifi"
        :orientation "h"
        :space-evenly false
        :spacing 4
@@ -135,6 +206,23 @@
          :spacing 8
       (label :text {wifi.ssid})
       (label :class "ip" :text {wifi.ip != "" ? "(" + wifi.ip + ")" : ""}))))
+
+(defwidget bluetooth-module []
+  (box :visible BLUETOOTH_PRESENT
+       :class "module bluetooth ${bluetooth.power == 'on' ? 'enabled' : 'disabled'}"
+       :orientation "h"
+       :space-evenly false
+       :spacing 4
+    (label :text {bluetooth.power == "on" ?
+                    (bluetooth.connected ? "󰂱 " : "󰂯 ") :
+                    "󰂲  Off"})
+    (box :orientation "h"
+         :space-evenly false
+         :spacing 4
+         :visible {bluetooth.power == "on"}
+      (label :text {bluetooth.connected ?
+                      (bluetooth.device_name != "" ? bluetooth.device_name : "Connected") :
+                      "Available"}))))
 
 
 (defwidget volume-module []
@@ -150,7 +238,8 @@
 
 
 (defwidget battery-module []
-  (box :class "module battery ${BATTERY <= 30 && BATTERY_STATUS != 'Charging' ? 'danger':''}"
+  (box :visible BATTERY_PRESENT
+       :class "module battery ${BATTERY <= 30 && BATTERY_STATUS != 'Charging' ? 'danger':''}"
        :orientation "h"
        :space-evenly false
        :spacing 4
