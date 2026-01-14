@@ -19,6 +19,7 @@ set fish_cursor_insert line
 set fish_cursor_replace_one underscore
 set fish_cursor_replace underscore
 set fish_cursor_visual block
+set -U tide_os_icon \uf303
 
 # Remove greeting
 set -g fish_greeting
@@ -26,6 +27,10 @@ set -g fish_greeting
 # Check if we're in interactive mode
 if status is-interactive
     fish_user_key_bindings
+end
+
+function __after_cmd --on-event fish_postexec
+    tide_from_caelestia
 end
 
 # sudo last command 
@@ -38,7 +43,6 @@ set -gx PATH ~/.npm-global/bin $PATH
 set -gx PATH ~/.local/bin $PATH
 set -gx QT_QPA_PLATFORMTHEME qt6ct
 
-alias ls='eza --icons --group-directories-first'
 alias cp='rsync -a --info=progress2'
 alias mv='rsync -a --info=progress2 --remove-source-files'
 alias rn='perl-rename'
@@ -77,6 +81,8 @@ if status is-interactive
     abbr la 'ls -a'
     abbr lla 'ls -la'
 
+    fish_config theme choose "Catppuccin Mocha"
+    functions -q tide_from_caelestia; and tide_from_caelestia
     # Custom colours
     cat ~/.local/state/caelestia/sequences.txt 2>/dev/null
 
