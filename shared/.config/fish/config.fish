@@ -46,6 +46,11 @@ set -gx QT_QPA_PLATFORMTHEME qt6ct
 alias cp='rsync -a --info=progress2'
 alias mv='rsync -a --info=progress2 --remove-source-files'
 alias rn='perl-rename'
+# nvim typos
+alias n='nvim'
+alias nv='nvim'
+alias nvi='nvim'
+alias nivm='nvim'
 
 if status is-interactive
     # Starship custom prompt
