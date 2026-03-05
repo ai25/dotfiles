@@ -16,3 +16,12 @@ vim.keymap.set("n", "<leader>sG", function()
     }, " "),
   })
 end, { desc = "Grep (root, incl. hidden + ignored)" })
+
+-- -- mini.align keymaps
+-- vim.keymap.set("x", "ga", function()
+--   require("mini.align").align()
+-- end, { desc = "Align selection" })
+--
+-- vim.keymap.set("n", "ga", function()
+--   require("mini.align").operator()
+-- end, { desc = "Align operator" })
