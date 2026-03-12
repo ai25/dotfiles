@@ -110,10 +110,11 @@ if status is-interactive
         if yt-dlp \
                 $URL \
                 --impersonate $TARGET \
-                --downloader aria2c \
-                --downloader-args "aria2c:-x 4 -s 4 --max-tries=0 --console-log-level=warn" \
+                # --downloader aria2c \
+                # --downloader-args "aria2c:-x 4 -s 4 --max-tries=0 --console-log-level=warn" \
                 --retries infinite \
                 --no-ignore-errors \
+                -f "bestvideo[height>=720]+bestaudio/best[height>=720]" \
                 -o "$OUT"
 
             echo "Success!"
