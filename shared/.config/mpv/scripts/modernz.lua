@@ -131,6 +131,7 @@ local user_opts = {
 	zoom_out_min = -1, -- minimum zoom out value
 
 	-- Colors and style
+	color_scheme_path = "", -- optional JSON palette file used to resolve color values written as "scheme:<key>|<fallback>"
 	osc_color = "#000000", -- accent color of the OSC and title bar
 	window_title_color = "#FFFFFF", -- color of the title in borderless/fullscreen mode
 	window_controls_color = "#FFFFFF", -- color of the window controls (close, minimize, maximize) in borderless/fullscreen mode
@@ -417,8 +418,7 @@ local language = {
 	},
 }
 
--- locale JSON file handler
-function get_locale_from_json(path)
+local function get_json_from_file(path, label)
 	local expand_path = mp.command_native({ "expand-path", path })
 
 	local file_info = utils.file_info(expand_path)
@@ -436,9 +436,16 @@ function get_locale_from_json(path)
 
 	local json_table, parse_error = utils.parse_json(json)
 	if not json_table then
-		mp.msg.error("JSON parse error:" .. parse_error)
+		mp.msg.error((label or "JSON") .. " parse error: " .. parse_error)
+		return nil
 	end
+
 	return json_table
+end
+
+-- locale JSON file handler
+function get_locale_from_json(path)
+	return get_json_from_file(path, "Locale JSON")
 end
 
 -- load external locales if available
@@ -458,6 +465,142 @@ if external then
 			end
 		else
 			mp.msg.warn("Locale data for language " .. lang .. " is not in the correct format.")
+		end
+	end
+end
+
+local color_option_names = {
+	"osc_color",
+	"window_title_color",
+	"window_controls_color",
+	"windowcontrols_close_hover",
+	"windowcontrols_max_hover",
+	"windowcontrols_min_hover",
+	"title_color",
+	"cache_info_color",
+	"seekbarfg_color",
+	"seekbarbg_color",
+	"seekbar_cache_color",
+	"time_color",
+	"chapter_title_color",
+	"side_buttons_color",
+	"middle_buttons_color",
+	"playpause_color",
+	"held_element_color",
+	"hover_effect_color",
+	"thumbnail_border_color",
+	"thumbnail_border_outline",
+	"nibble_color",
+	"nibble_current_color",
+}
+
+local scheme_color_refs = {}
+local default_color_values = {}
+
+for _, opt_name in ipairs(color_option_names) do
+	default_color_values[opt_name] = user_opts[opt_name]
+end
+
+local function get_nested_value(source, path)
+	local value = source
+	for segment in string.gmatch(path, "[^.]+") do
+		if type(value) ~= "table" then
+			return nil
+		end
+		value = value[segment]
+	end
+	return value
+end
+
+local function normalize_color_string(color)
+	if type(color) ~= "string" then
+		return nil
+	end
+
+	if color:find("^#%x%x%x%x%x%x$") then
+		return color:upper()
+	end
+
+	if color:find("^%x%x%x%x%x%x$") then
+		return "#" .. color:upper()
+	end
+
+	return nil
+end
+
+local function snapshot_scheme_color_refs(changed)
+	for _, opt_name in ipairs(color_option_names) do
+		if changed == nil or changed[opt_name] or changed.color_scheme_path then
+			local value = user_opts[opt_name]
+			if type(value) == "string" and value:find("^scheme:") then
+				scheme_color_refs[opt_name] = value
+			else
+				scheme_color_refs[opt_name] = nil
+			end
+		end
+	end
+end
+
+local function resolve_scheme_color_reference(reference, scheme)
+	local reference_body = reference:match("^scheme:(.+)$")
+	if not reference_body then
+		return nil
+	end
+
+	for candidate in string.gmatch(reference_body, "[^|]+") do
+		local key = candidate:match("^%s*(.-)%s*$")
+		local normalized_candidate = normalize_color_string(key)
+		if normalized_candidate ~= nil then
+			return normalized_candidate
+		end
+
+		local value
+		if key:find("%.") then
+			value = get_nested_value(scheme, key)
+		else
+			if type(scheme.colours) == "table" then
+				value = scheme.colours[key]
+			end
+			if value == nil then
+				value = scheme[key]
+			end
+		end
+
+		local normalized = normalize_color_string(value)
+		if normalized ~= nil then
+			return normalized
+		end
+	end
+
+	return nil, "no fallback in '" .. reference_body .. "' resolved to a valid color"
+end
+
+local function apply_color_scheme()
+	for _, opt_name in ipairs(color_option_names) do
+		if scheme_color_refs[opt_name] ~= nil then
+			user_opts[opt_name] = default_color_values[opt_name]
+		end
+	end
+
+	if user_opts.color_scheme_path == nil or user_opts.color_scheme_path == "" then
+		return
+	end
+
+	local scheme = get_json_from_file(user_opts.color_scheme_path, "Color scheme JSON")
+	if not scheme then
+		msg.warn("Unable to read color scheme from '" .. user_opts.color_scheme_path .. "'")
+		return
+	end
+
+	for _, opt_name in ipairs(color_option_names) do
+		local reference = scheme_color_refs[opt_name]
+		if reference ~= nil then
+			local resolved, err = resolve_scheme_color_reference(reference, scheme)
+			if resolved then
+				user_opts[opt_name] = resolved
+			else
+				msg.warn("Unable to resolve " .. opt_name .. "=" .. reference .. ": " .. err)
+			end
 		end
 	end
 end
@@ -4733,6 +4876,8 @@ end
 
 -- read options from config and command-line
 opt.read_options(user_opts, "modernz", function(changed)
+	snapshot_scheme_color_refs(changed)
+	apply_color_scheme()
 	validate_user_opts()
 	set_osc_locale()
 	set_icon_theme()
@@ -4747,6 +4892,8 @@ opt.read_options(user_opts, "modernz", function(changed)
 	request_init()
 end)
 
+snapshot_scheme_color_refs()
+apply_color_scheme()
 validate_user_opts()
 set_osc_locale()
 set_icon_theme()
