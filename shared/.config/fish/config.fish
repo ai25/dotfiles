@@ -110,11 +110,21 @@ if status is-interactive
         if yt-dlp \
                 $URL \
                 --impersonate $TARGET \
-                # --downloader aria2c \
-                # --downloader-args "aria2c:-x 4 -s 4 --max-tries=0 --console-log-level=warn" \
+                -f "bestvideo[height<=1080][height>=720]+bestaudio/best[height<=1080]" \
                 --retries infinite \
+                --no-playlist \
                 --no-ignore-errors \
-                -f "bestvideo[height>=720]+bestaudio/best[height>=720]" \
+                --merge-output-format mkv \
+                --embed-metadata \
+                --embed-chapters \
+                --no-write-subs \
+                --no-write-auto-subs \
+                --sub-langs en \
+                --sub-format srt/best \
+                --convert-subs srt \
+                --embed-subs \
+                --embed-thumbnail \
+                --mtime \
                 -o "$OUT"
 
             echo "Success!"
