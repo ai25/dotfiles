@@ -180,6 +180,11 @@ local user_opts = {
 	livemarkers = true, -- update chapter markers on the seekbar when duration changes
 	seekbarkeyframes = false, -- use keyframes when dragging the seekbar
 	slider_rounded_corners = true, -- rounded corners seekbar slider
+	chapter_segments = false, -- split the seekbar into chapter segments instead of drawing nibble markers
+	chapter_segment_gap = 2, -- pixel gap between chapter segments when chapter_segments is enabled
+	chapter_segment_hover_extra_height = 3, -- extra pixels added above/below the hovered chapter segment
+	chapter_segment_hover_extra_width = 1, -- extra horizontal expansion on each side when hovered; adjacent segments shrink to compensate
+	chapter_segment_hover_speed = 14, -- hover animation speed for chapter segments
 
 	nibbles_top = true, -- top chapter nibbles above seekbar
 	nibbles_bottom = true, -- bottom chapter nibbles below seekbar
@@ -823,6 +828,9 @@ local state = {
 	is_URL = false,
 	is_image = false,
 	url_path = "", -- used for yt-dlp downloading
+	seekbar_segment_hover = {},
+	seekbar_segment_hover_target = nil,
+	seekbar_segment_hover_last_time = nil,
 }
 
 local logo_lines = {
@@ -1378,9 +1386,181 @@ local function get_chapter(possec)
 	end
 end
 
--- Draws a handle on the seekbar according to user_opts
--- Returns handle position and radius
-local function draw_seekbar_handle(element, elem_ass, override_alpha)
+local function get_seekbar_segments(element)
+	if element.slider.markerF == nil then
+		return {}
+	end
+
+	local min = element.slider.min.value
+	local max = element.slider.max.value
+	local boundaries = { min }
+
+	for _, marker in ipairs(element.slider.markerF()) do
+		if marker > min and marker < max then
+			local last = boundaries[#boundaries]
+			if math.abs(marker - last) > 0.001 then
+				boundaries[#boundaries + 1] = marker
+			end
+		end
+	end
+
+	boundaries[#boundaries + 1] = max
+
+	local segments = {}
+	for i = 1, #boundaries - 1 do
+		if boundaries[i + 1] - boundaries[i] > 0.001 then
+			segments[#segments + 1] = {
+				start = boundaries[i],
+				["end"] = boundaries[i + 1],
+			}
+		end
+	end
+
+	return segments
+end
+
+local function get_hovered_seekbar_segment(element, segments)
+	if not mouse_hit(element) then
+		return nil
+	end
+
+	local hover_pos = get_slider_value(element)
+	for i, segment in ipairs(segments) do
+		if hover_pos >= segment.start and (hover_pos < segment["end"] or i == #segments) then
+			return i
+		end
+	end
+
+	return nil
+end
+
+local function get_seekbar_segment_hover_factors(element, segments)
+	if not user_opts.chapter_segments or #segments <= 1 then
+		state.seekbar_segment_hover = {}
+		state.seekbar_segment_hover_target = nil
+		state.seekbar_segment_hover_last_time = nil
+		return state.seekbar_segment_hover
+	end
+
+	local hovered = get_hovered_seekbar_segment(element, segments)
+	local now = mp.get_time()
+	if hovered ~= state.seekbar_segment_hover_target then
+		state.seekbar_segment_hover_last_time = now
+	end
+	local dt = math.max(0, math.min(0.05, now - (state.seekbar_segment_hover_last_time or now)))
+	local step = dt * math.max(0, user_opts.chapter_segment_hover_speed)
+	local factors = state.seekbar_segment_hover
+	local animating = false
+
+	for i = 1, #segments do
+		local target = (hovered == i) and 1 or 0
+		local current = factors[i] or 0
+		local delta = target - current
+		local next_value
+
+		if math.abs(delta) <= step then
+			next_value = target
+		else
+			next_value = current + (delta > 0 and step or -step)
+			animating = true
+		end
+
+		factors[i] = next_value
+	end
+
+	for i = #segments + 1, #factors do
+		factors[i] = nil
+	end
+
+	state.seekbar_segment_hover_target = hovered
+	state.seekbar_segment_hover_last_time = now
+
+	if animating then
+		request_tick()
+	end
+
+	return factors
+end
+
+local function append_seekbar_interval_segmented(element, elem_ass, start_pos, end_pos, segments, hover_factors)
+	local slider_lo = element.layout.slider
+	local elem_geo = element.layout.geometry
+	local radius = slider_lo.radius or 0
+	local min = element.slider.min.value
+	local max = element.slider.max.value
+	local gap = math.max(0, user_opts.chapter_segment_gap) / 2
+
+	start_pos = math.max(min, start_pos)
+	end_pos = math.min(max, end_pos)
+
+	if end_pos <= start_pos then
+		return
+	end
+
+	for i, segment in ipairs(segments) do
+		local overlap_start = math.max(segment.start, start_pos)
+		local overlap_end = math.min(segment["end"], end_pos)
+
+		if overlap_end > overlap_start then
+			local x1 = get_slider_ele_pos_for(element, overlap_start)
+			local x2 = get_slider_ele_pos_for(element, overlap_end)
+			local hover_factor = hover_factors and hover_factors[i] or 0
+			local extra = math.max(0, user_opts.chapter_segment_hover_extra_height) * hover_factor
+			local width_extra = math.max(0, user_opts.chapter_segment_hover_extra_width) * hover_factor
+			local prev_width_extra = math.max(0, user_opts.chapter_segment_hover_extra_width)
+				* (hover_factors and hover_factors[i - 1] or 0)
+			local next_width_extra = math.max(0, user_opts.chapter_segment_hover_extra_width)
+				* (hover_factors and hover_factors[i + 1] or 0)
+			local top = math.max(0, slider_lo.gap - extra)
+			local bottom = math.min(elem_geo.h, elem_geo.h - slider_lo.gap + extra)
+
+			if overlap_start == segment.start and segment.start > min then
+				x1 = x1 + gap + prev_width_extra - width_extra
+			end
+			if overlap_end == segment["end"] and segment["end"] < max then
+				x2 = x2 - gap + width_extra - next_width_extra
+			end
+
+			if x2 > x1 then
+				if radius > 0 then
+					elem_ass:round_rect_cw(x1, top, x2, bottom, radius)
+				else
+					elem_ass:rect_cw(x1, top, x2, bottom)
+				end
+			end
+		end
+	end
+end
+
+local function draw_seekbar_background_segmented(element, elem_ass, segments, hover_factors)
+	if not user_opts.chapter_segments then
+		return false
+	end
+
+	segments = segments or get_seekbar_segments(element)
+	if #segments <= 1 then
+		return false
+	end
+	hover_factors = hover_factors or get_seekbar_segment_hover_factors(element, segments)
+
+	elem_ass:draw_stop()
+	elem_ass:merge(element.style_ass)
+	ass_append_alpha(elem_ass, element.layout.alpha, 0)
+	elem_ass:append("{\\blur0\\bord0\\1c&H" .. osc_color_convert(user_opts.seekbarbg_color) .. "&}")
+	elem_ass:merge(element.static_ass)
+	append_seekbar_interval_segmented(
+		element,
+		elem_ass,
+		element.slider.min.value,
+		element.slider.max.value,
+		segments,
+		hover_factors
+	)
+
+	return true
+end
+
+local function get_seekbar_handle_geometry(element)
 	local pos = element.slider.posF()
 	if not pos then
 		return 0, 0
@@ -1389,6 +1569,21 @@ local function draw_seekbar_handle(element, elem_ass, override_alpha)
 	local elem_geo = element.layout.geometry
 	local rh = display_handle and (user_opts.seek_handle_size * elem_geo.h / 2) or 0 -- handle radius
 	local xp = get_slider_ele_pos_for(element, pos) -- handle position
+
+	return xp, rh
+end
+
+-- Draws a handle on the seekbar according to user_opts
+-- Returns handle position and radius
+local function draw_seekbar_handle(element, elem_ass, override_alpha)
+	local pos = element.slider.posF()
+	if not pos then
+		return 0, 0
+	end
+	local xp, rh = get_seekbar_handle_geometry(element)
+	local display_handle = user_opts.seek_handle_size > 0
+	local elem_geo = element.layout.geometry
+
 	local handle_hovered = mouse_hit_coords(
 		element.hitbox.x1 + xp - rh,
 		element.hitbox.y1 + elem_geo.h / 2 - rh,
@@ -1404,6 +1599,10 @@ local function draw_seekbar_handle(element, elem_ass, override_alpha)
 			end
 		end
 
+		elem_ass:draw_stop()
+		elem_ass:merge(element.style_ass)
+		ass_append_alpha(elem_ass, element.layout.alpha, override_alpha or 0)
+		elem_ass:merge(element.static_ass)
 		ass_draw_cir_cw(elem_ass, xp, elem_geo.h / 2, rh)
 
 		if user_opts.hover_effect_for_sliders then
@@ -1419,7 +1618,7 @@ local function draw_seekbar_handle(element, elem_ass, override_alpha)
 end
 
 -- Draws seekbar ranges according to user_opts
-local function draw_seekbar_ranges(element, elem_ass, xp, rh, override_alpha)
+local function draw_seekbar_ranges(element, elem_ass, xp, rh, override_alpha, segments, hover_factors)
 	local handle = xp and rh
 	xp = xp or 0
 	rh = rh or 0
@@ -1436,27 +1635,34 @@ local function draw_seekbar_ranges(element, elem_ass, xp, rh, override_alpha)
 	elem_ass:merge(element.static_ass)
 
 	local radius = slider_lo.radius or 0
+	segments = segments or (user_opts.chapter_segments and get_seekbar_segments(element) or nil)
+	local has_segmented_chapters = segments ~= nil and #segments > 1
+	hover_factors = hover_factors or (has_segmented_chapters and get_seekbar_segment_hover_factors(element, segments) or nil)
 
 	for _, range in pairs(seekRanges) do
-		local pstart = math.max(0, get_slider_ele_pos_for(element, range["start"]) - slider_lo.gap)
-		local pend = math.min(elem_geo.w, get_slider_ele_pos_for(element, range["end"]) + slider_lo.gap)
+		if has_segmented_chapters then
+			append_seekbar_interval_segmented(element, elem_ass, range["start"], range["end"], segments, hover_factors)
+		else
+			local pstart = math.max(0, get_slider_ele_pos_for(element, range["start"]) - slider_lo.gap)
+			local pend = math.min(elem_geo.w, get_slider_ele_pos_for(element, range["end"]) + slider_lo.gap)
 
-		if handle and (pstart < xp + rh and pend > xp - rh) then
-			if pstart < xp - rh then
-				if radius > 0 then
-					elem_ass:round_rect_cw(pstart, slider_lo.gap, xp - rh, elem_geo.h - slider_lo.gap, radius)
-				else
-					elem_ass:rect_cw(pstart, slider_lo.gap, xp - rh, elem_geo.h - slider_lo.gap)
+			if handle and (pstart < xp + rh and pend > xp - rh) then
+				if pstart < xp - rh then
+					if radius > 0 then
+						elem_ass:round_rect_cw(pstart, slider_lo.gap, xp - rh, elem_geo.h - slider_lo.gap, radius)
+					else
+						elem_ass:rect_cw(pstart, slider_lo.gap, xp - rh, elem_geo.h - slider_lo.gap)
+					end
 				end
+				pstart = xp + rh
 			end
-			pstart = xp + rh
-		end
 
-		if pend > pstart then
-			if radius > 0 then
-				elem_ass:round_rect_cw(pstart, slider_lo.gap, pend, elem_geo.h - slider_lo.gap, radius)
-			else
-				elem_ass:rect_cw(pstart, slider_lo.gap, pend, elem_geo.h - slider_lo.gap)
+			if pend > pstart then
+				if radius > 0 then
+					elem_ass:round_rect_cw(pstart, slider_lo.gap, pend, elem_geo.h - slider_lo.gap, radius)
+				else
+					elem_ass:rect_cw(pstart, slider_lo.gap, pend, elem_geo.h - slider_lo.gap)
+				end
 			end
 		end
 	end
@@ -1464,6 +1670,10 @@ end
 
 -- Draw chapter nibbles on the seekbar with per-chapter coloring
 local function draw_seekbar_nibbles(element, elem_ass)
+	if user_opts.chapter_segments then
+		return
+	end
+
 	local slider_lo = element.layout.slider
 	local elem_geo = element.layout.geometry
 
@@ -1546,11 +1756,27 @@ local function draw_seekbar_nibbles(element, elem_ass)
 end
 
 -- Draw seekbar progress more accurately
-local function draw_seekbar_progress(element, elem_ass)
+local function draw_seekbar_progress(element, elem_ass, segments, hover_factors)
 	local pos = element.slider.posF()
 	if not pos then
 		return
 	end
+
+	if user_opts.chapter_segments then
+		segments = segments or get_seekbar_segments(element)
+		if #segments > 1 then
+			append_seekbar_interval_segmented(
+				element,
+				elem_ass,
+				element.slider.min.value,
+				pos,
+				segments,
+				hover_factors or get_seekbar_segment_hover_factors(element, segments)
+			)
+			return
+		end
+	end
+
 	local xp = get_slider_ele_pos_for(element, pos)
 	local slider_lo = element.layout.slider
 	local elem_geo = element.layout.geometry
@@ -1635,6 +1861,12 @@ local function render_elements(master_ass, osc_vis, wc_vis)
 				local s_min = element.slider.min.value
 				local s_max = element.slider.max.value
 
+				local segments = user_opts.chapter_segments and get_seekbar_segments(element) or nil
+				local hover_factors = (segments and #segments > 1)
+						and get_seekbar_segment_hover_factors(element, segments)
+					or nil
+
+				draw_seekbar_background_segmented(element, elem_ass, segments, hover_factors)
 				draw_seekbar_nibbles(element, elem_ass)
 
 				-- reset context so handle/progress render on top of nibbles
@@ -1643,9 +1875,10 @@ local function render_elements(master_ass, osc_vis, wc_vis)
 				ass_append_alpha(elem_ass, element.layout.alpha, 0, nil, anim_override)
 				elem_ass:merge(element.static_ass)
 
-				local xp, rh = draw_seekbar_handle(element, elem_ass) -- handle posistion, handle radius
-				draw_seekbar_progress(element, elem_ass)
-				draw_seekbar_ranges(element, elem_ass, xp, rh)
+				local xp, rh = get_seekbar_handle_geometry(element) -- handle position, handle radius
+				draw_seekbar_progress(element, elem_ass, segments, hover_factors)
+				draw_seekbar_ranges(element, elem_ass, xp, rh, nil, segments, hover_factors)
+				draw_seekbar_handle(element, elem_ass)
 
 				elem_ass:draw_stop()
 
@@ -2262,6 +2495,7 @@ layouts["modern"] = function()
 
 	-- Seekbar
 	new_element("seekbarbg", "box")
+	elements.seekbarbg.visible = not user_opts.chapter_segments
 	lo = add_layout("seekbarbg")
 	local seekbar_bg_h = 4
 	lo.geometry = { x = refX, y = refY - 72, an = 5, w = osc_geo.w - 50, h = seekbar_bg_h }
@@ -2600,6 +2834,7 @@ layouts["modern-compact"] = function()
 
 	-- Seekbar
 	new_element("seekbarbg", "box")
+	elements.seekbarbg.visible = not user_opts.chapter_segments
 	lo = add_layout("seekbarbg")
 	local seekbar_bg_h = 4
 	lo.geometry = { x = refX, y = refY - 72, an = 5, w = osc_geo.w - 45, h = seekbar_bg_h }
@@ -4805,6 +5040,26 @@ local function validate_user_opts()
 	if user_opts.seek_handle_size < 0 then
 		msg.warn("seek_handle_size must be 0 or higher. Setting it to 0 (minimum).")
 		user_opts.seek_handle_size = 0
+	end
+
+	if user_opts.chapter_segment_gap < 0 then
+		msg.warn("chapter_segment_gap must be 0 or higher. Setting it to 0 (minimum).")
+		user_opts.chapter_segment_gap = 0
+	end
+
+	if user_opts.chapter_segment_hover_extra_height < 0 then
+		msg.warn("chapter_segment_hover_extra_height must be 0 or higher. Setting it to 0 (minimum).")
+		user_opts.chapter_segment_hover_extra_height = 0
+	end
+
+	if user_opts.chapter_segment_hover_extra_width < 0 then
+		msg.warn("chapter_segment_hover_extra_width must be 0 or higher. Setting it to 0 (minimum).")
+		user_opts.chapter_segment_hover_extra_width = 0
+	end
+
+	if user_opts.chapter_segment_hover_speed < 0 then
+		msg.warn("chapter_segment_hover_speed must be 0 or higher. Setting it to 0 (minimum).")
+		user_opts.chapter_segment_hover_speed = 0
 	end
 
 	if user_opts.volume_control_type ~= "linear" and user_opts.volume_control_type ~= "logarithmic" then

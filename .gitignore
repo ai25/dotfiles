@@ -1,0 +1,25 @@
+# OS/editor noise
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Python cache artifacts
+__pycache__/
+*.pyc
+
+# fish runtime state
+shared/.config/fish/fish_variables*
+
+# btop runtime log
+profile-hypr/.config/btop/btop.log
+
+# GTK runtime state
+profile-hypr/.config/gtk-3.0/bookmarks
+
+# generated mpv script data
+shared/.config/mpv/scripts/sponsorblock_shared/sponsorblock.txt
+
+# Syncthing state/history
+.stfolder/
+.stversions/
